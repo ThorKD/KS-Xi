@@ -429,7 +429,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
   <!-- ===================== PAGE: MATCHES ===================== -->
   <div class="page on" id="pg-home">
-    <div class="sh"><div class="st">MATCHES</div><div class="ss">IPL 2025</div></div>
+    <div class="sh"><div class="st">MATCHES</div><div class="ss" id="tournamentSub">T20 WORLD CUP 2026</div></div>
 
     <!-- Install Banner -->
     <div class="inst-ban" id="installBan">
@@ -531,7 +531,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
   <!-- ===================== PAGE: STATS ===================== -->
   <div class="page" id="pg-stats">
-    <div class="sh"><div class="st">STATS</div><div class="ss">Season 2025</div></div>
+    <div class="sh"><div class="st">STATS</div><div class="ss">T20 WC 2026</div></div>
     <div class="sg">
       <div class="sc"><div class="sc-ico">🏏</div><div class="sc-v" id="st-pts">—</div><div class="sc-l">Total Points</div></div>
       <div class="sc"><div class="sc-ico">🥇</div><div class="sc-v" id="st-rank">—</div><div class="sc-l">Best Rank</div></div>
@@ -585,7 +585,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="set-list">
       <div class="set-r" onclick="openSheet('apiSheet')">
         <div class="set-ico">🔗</div>
-        <div class="set-txt"><div class="set-lbl">CricAPI Integration</div><div class="set-sub">Real live scores & player data</div></div>
+        <div class="set-txt"><div class="set-lbl">CricAPI Integration</div><div class="set-sub">Live T20 World Cup scores & data</div></div>
         <div class="api-chip"><div class="api-dot demo" id="apiDot"></div><span id="apiStatus" style="font-size:11px;color:var(--gold)">Demo</span></div>
       </div>
       <div class="set-r" onclick="openSheet('supaSheet')">
@@ -733,7 +733,7 @@ CREATE POLICY "insert own" ON teams FOR INSERT WITH CHECK (true);</pre>
     </div>
     <div>
       <strong style="color:var(--acc);font-size:14px;display:block;margin-bottom:4px">Step 2 — CricAPI (Live Scores)</strong>
-      Visit <a href="https://cricketdata.org" target="_blank" style="color:var(--acc)">cricketdata.org</a>, sign up free, copy your API key and paste in <strong style="color:var(--txt)">Settings → CricAPI</strong>. The app will then fetch real IPL matches, live scores, and actual player pool with credits.
+      Visit <a href="https://cricketdata.org" target="_blank" style="color:var(--acc)">cricketdata.org</a>, sign up free, copy your API key and paste in <strong style="color:var(--txt)">Settings → CricAPI</strong>. The app will then fetch real T20 World Cup matches, live scores, and actual player data.
     </div>
     <div>
       <strong style="color:var(--acc);font-size:14px;display:block;margin-bottom:4px">Step 3 — Share with Friends</strong>
@@ -780,10 +780,10 @@ CREATE POLICY "insert own" ON teams FOR INSERT WITH CHECK (true);</pre>
   <div class="sh-s">Push notification to all league members</div>
   <label class="form-label">MATCH</label>
   <select class="form-input" id="alertMatch" style="cursor:pointer">
-    <option>MI vs CSK — Today 7:30 PM</option>
-    <option>RCB vs KKR — Tomorrow 7:30 PM</option>
-    <option>RR vs DC — May 12 3:30 PM</option>
-    <option>SRH vs GT — May 14 7:30 PM</option>
+    <option>IND vs PAK — T20 World Cup</option>
+    <option>AUS vs ENG — T20 World Cup</option>
+    <option>SA vs AFG — T20 World Cup</option>
+    <option>NZ vs WI — T20 World Cup</option>
     <option>Custom message...</option>
   </select>
   <label class="form-label">CUSTOM MESSAGE (optional)</label>
@@ -841,31 +841,35 @@ function initSupabase() {
 // PLAYER DATA (demo — replaced by CricAPI when key is set)
 // ================================================================
 const DEMO_PLAYERS = [
-  {id:1,name:'MS Dhoni',em:'🐐',team:'CSK',role:'WK',credits:9.5,pts:312,avg:48,form:['w','w','w','l','w']},
-  {id:2,name:'KL Rahul',em:'🦁',team:'LSG',role:'WK',credits:9,pts:287,avg:42,form:['w','l','w','w','l']},
-  {id:3,name:'Ishan Kishan',em:'⚡',team:'MI',role:'WK',credits:8,pts:241,avg:38,form:['l','w','w','l','w']},
-  {id:4,name:'Virat Kohli',em:'👑',team:'RCB',role:'BAT',credits:11,pts:498,avg:72,form:['w','w','w','w','w']},
-  {id:5,name:'Rohit Sharma',em:'🎯',team:'MI',role:'BAT',credits:10.5,pts:421,avg:64,form:['w','w','l','w','w']},
-  {id:6,name:'Shubman Gill',em:'🌟',team:'GT',role:'BAT',credits:9.5,pts:388,avg:58,form:['w','l','w','w','l']},
-  {id:7,name:'Ruturaj Gaikwad',em:'🔥',team:'CSK',role:'BAT',credits:9,pts:356,avg:54,form:['w','w','w','l','w']},
-  {id:8,name:'Devdutt Padikkal',em:'🏹',team:'RR',role:'BAT',credits:7.5,pts:278,avg:40,form:['l','w','l','w','w']},
-  {id:9,name:'Sai Sudharsan',em:'🌈',team:'GT',role:'BAT',credits:7,pts:243,avg:36,form:['w','w','l','l','w']},
-  {id:10,name:'Hardik Pandya',em:'💪',team:'MI',role:'AR',credits:10,pts:445,avg:66,form:['w','w','w','w','l']},
-  {id:11,name:'Ravindra Jadeja',em:'🐍',team:'CSK',role:'AR',credits:9.5,pts:412,avg:61,form:['w','l','w','w','w']},
-  {id:12,name:'Axar Patel',em:'🎭',team:'DC',role:'AR',credits:8.5,pts:334,avg:50,form:['l','w','w','l','w']},
-  {id:13,name:'Jasprit Bumrah',em:'🚀',team:'MI',role:'BOWL',credits:10.5,pts:468,avg:69,form:['w','w','w','w','w']},
-  {id:14,name:'Yuzvendra Chahal',em:'🕷️',team:'RR',role:'BOWL',credits:9,pts:391,avg:57,form:['w','l','w','w','l']},
-  {id:15,name:'Mohammed Siraj',em:'🌪️',team:'RCB',role:'BOWL',credits:9,pts:367,avg:54,form:['w','w','l','w','w']},
-  {id:16,name:'Rashid Khan',em:'🌀',team:'GT',role:'BOWL',credits:9.5,pts:402,avg:60,form:['w','w','w','l','w']},
-  {id:17,name:'T Natarajan',em:'💫',team:'SRH',role:'BOWL',credits:7.5,pts:289,avg:42,form:['l','w','w','l','w']},
-  {id:18,name:'Kuldeep Yadav',em:'🎪',team:'DC',role:'BOWL',credits:8.5,pts:348,avg:52,form:['w','w','l','w','l']},
+  // Wicket Keepers
+  {id:1,name:'Rishabh Pant',em:'🧤',team:'IND',role:'WK',credits:9.5,pts:312,avg:48,form:['w','w','w','l','w']},
+  {id:2,name:'Jos Buttler',em:'💥',team:'ENG',role:'WK',credits:9.5,pts:298,avg:46,form:['w','l','w','w','l']},
+  {id:3,name:'Mohammad Rizwan',em:'🛡️',team:'PAK',role:'WK',credits:9,pts:276,avg:44,form:['l','w','w','l','w']},
+  // Batters
+  {id:4,name:'Virat Kohli',em:'👑',team:'IND',role:'BAT',credits:11,pts:498,avg:72,form:['w','w','w','w','w']},
+  {id:5,name:'Rohit Sharma',em:'🎯',team:'IND',role:'BAT',credits:10.5,pts:421,avg:64,form:['w','w','l','w','w']},
+  {id:6,name:'David Warner',em:'🔥',team:'AUS',role:'BAT',credits:9.5,pts:388,avg:58,form:['w','l','w','w','l']},
+  {id:7,name:'Babar Azam',em:'🌟',team:'PAK',role:'BAT',credits:10,pts:410,avg:62,form:['w','w','w','l','w']},
+  {id:8,name:'Quinton de Kock',em:'⚡',team:'SA',role:'BAT',credits:9,pts:356,avg:54,form:['w','w','w','l','w']},
+  {id:9,name:'Devon Conway',em:'🏹',team:'NZ',role:'BAT',credits:8.5,pts:312,avg:48,form:['l','w','l','w','w']},
+  // All Rounders
+  {id:10,name:'Hardik Pandya',em:'💪',team:'IND',role:'AR',credits:10,pts:445,avg:66,form:['w','w','w','w','l']},
+  {id:11,name:'Ben Stokes',em:'🦁',team:'ENG',role:'AR',credits:10,pts:432,avg:64,form:['w','l','w','w','w']},
+  {id:12,name:'Shakib Al Hasan',em:'🐍',team:'BAN',role:'AR',credits:9,pts:378,avg:56,form:['l','w','w','l','w']},
+  {id:13,name:'Glenn Maxwell',em:'🌪️',team:'AUS',role:'AR',credits:9.5,pts:398,avg:60,form:['w','w','l','w','w']},
+  // Bowlers
+  {id:14,name:'Jasprit Bumrah',em:'🚀',team:'IND',role:'BOWL',credits:10.5,pts:468,avg:69,form:['w','w','w','w','w']},
+  {id:15,name:'Shaheen Afridi',em:'🌀',team:'PAK',role:'BOWL',credits:9.5,pts:412,avg:61,form:['w','w','w','l','w']},
+  {id:16,name:'Rashid Khan',em:'🕷️',team:'AFG',role:'BOWL',credits:10,pts:445,avg:66,form:['w','w','w','w','l']},
+  {id:17,name:'Trent Boult',em:'💨',team:'NZ',role:'BOWL',credits:9,pts:367,avg:54,form:['w','l','w','w','w']},
+  {id:18,name:'Adil Rashid',em:'🎪',team:'ENG',role:'BOWL',credits:8.5,pts:334,avg:50,form:['w','w','l','w','l']},
 ];
 
 const DEMO_MATCHES = [
-  {id:'m1',t1:'MI',t2:'CSK',f1:'🔵',f2:'🟡',status:'live',over:'14.3',sc1:'156/4',sc2:'Bat 2nd',venue:'Wankhede',label:'Match 22'},
-  {id:'m2',t1:'RCB',t2:'KKR',f1:'🔴',f2:'🟣',status:'soon',when:'Tomorrow 7:30 PM',sc1:'—',sc2:'—',venue:'Chinnaswamy',label:'Match 23'},
-  {id:'m3',t1:'RR',t2:'DC',f1:'🟤',f2:'🩵',status:'soon',when:'May 12 3:30 PM',sc1:'—',sc2:'—',venue:'Sawai Mansingh',label:'Match 24'},
-  {id:'m4',t1:'SRH',t2:'GT',f1:'🟠',f2:'🟢',status:'soon',when:'May 14 7:30 PM',sc1:'—',sc2:'—',venue:'Rajiv Gandhi',label:'Match 25'},
+  {id:'m1',t1:'IND',t2:'PAK',f1:'🇮🇳',f2:'🇵🇰',status:'soon',when:'TOMORROW 7:00 PM IST',sc1:'—',sc2:'—',venue:'Nassau County',label:'T20I · Group A'},
+  {id:'m2',t1:'AUS',t2:'ENG',f1:'🇦🇺',f2:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',status:'soon',when:'8 Mar · 7:00 PM IST',sc1:'—',sc2:'—',venue:'Barbados',label:'T20I · Group B'},
+  {id:'m3',t1:'SA',t2:'AFG',f1:'🇿🇦',f2:'🇦🇫',status:'soon',when:'9 Mar · 3:30 PM IST',sc1:'—',sc2:'—',venue:'Antigua',label:'T20I · Group C'},
+  {id:'m4',t1:'NZ',t2:'WI',f1:'🇳🇿',f2:'🌴',status:'soon',when:'10 Mar · 7:00 PM IST',sc1:'—',sc2:'—',venue:'Trinidad',label:'T20I · Group D'},
 ];
 
 // Demo leagues (replaced by Supabase when connected)
@@ -1074,6 +1078,14 @@ function updateProfile() {
 // ================================================================
 function renderMatches() {
   const ml = document.getElementById('matchList');
+  if(!S.matchData.length) {
+    ml.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;line-height:1.8">
+      <div style="font-size:32px;margin-bottom:10px">🏏</div>
+      No matches found right now.<br>
+      <span style="font-size:11px">CricAPI is connected — check back on match days!</span>
+    </div>`;
+    return;
+  }
   ml.innerHTML = S.matchData.map(m => `
     <div class="mc" onclick="goTeam('${m.t1} vs ${m.t2}')">
       <div class="mc-banner">
@@ -1085,7 +1097,7 @@ function renderMatches() {
         </div>
       </div>
       <div class="mc-foot">
-        <div class="mc-meta">📍 ${m.venue} · T20 · ${m.label}</div>
+        <div class="mc-meta">📍 ${m.venue||'TBA'} · ${m.label}</div>
         <button class="mc-btn" onclick="event.stopPropagation();goTeam('${m.t1} vs ${m.t2}')">${m.status==='live'?'Edit XI':'Pick XI'}</button>
       </div>
     </div>`).join('');
@@ -1098,46 +1110,233 @@ function goTeam(match) {
 }
 
 // ================================================================
-// LIVE SCORE FETCH (CricAPI)
+// LIVE SCORE FETCH (CricAPI) — hits all 3 endpoints & merges
 // ================================================================
+
+// All T20 teams → emoji map (IPL + T20 World Cup nations)
+const TEAM_EMO = {
+  // IPL
+  'Mumbai Indians':'🔵', 'MI':'🔵',
+  'Chennai Super Kings':'🟡', 'CSK':'🟡',
+  'Royal Challengers Bengaluru':'🔴', 'Royal Challengers Bangalore':'🔴', 'RCB':'🔴',
+  'Kolkata Knight Riders':'🟣', 'KKR':'🟣',
+  'Rajasthan Royals':'🟤', 'RR':'🟤',
+  'Delhi Capitals':'🩵', 'DC':'🩵',
+  'Punjab Kings':'🟠', 'PBKS':'🟠',
+  'Sunrisers Hyderabad':'🟠', 'SRH':'🟠',
+  'Gujarat Titans':'🟢', 'GT':'🟢',
+  'Lucknow Super Giants':'🩶', 'LSG':'🩶',
+  // T20 World Cup nations
+  'India':'🇮🇳', 'IND':'🇮🇳',
+  'Australia':'🇦🇺', 'AUS':'🇦🇺',
+  'England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'ENG':'🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  'Pakistan':'🇵🇰', 'PAK':'🇵🇰',
+  'South Africa':'🇿🇦', 'SA':'🇿🇦',
+  'New Zealand':'🇳🇿', 'NZ':'🇳🇿',
+  'West Indies':'🌴', 'WI':'🌴',
+  'Sri Lanka':'🇱🇰', 'SL':'🇱🇰',
+  'Bangladesh':'🇧🇩', 'BAN':'🇧🇩',
+  'Afghanistan':'🇦🇫', 'AFG':'🇦🇫',
+  'Zimbabwe':'🇿🇼', 'ZIM':'🇿🇼',
+  'Ireland':'🇮🇪', 'IRE':'🇮🇪',
+  'Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'SCO':'🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  'Netherlands':'🇳🇱', 'NED':'🇳🇱',
+  'Nepal':'🇳🇵', 'NEP':'🇳🇵',
+  'Namibia':'🇳🇦', 'NAM':'🇳🇦',
+  'Oman':'🇴🇲', 'OMA':'🇴🇲',
+  'Papua New Guinea':'🇵🇬', 'PNG':'🇵🇬',
+  'Uganda':'🇺🇬', 'UGA':'🇺🇬',
+  'Canada':'🇨🇦', 'CAN':'🇨🇦',
+  'USA':'🇺🇸', 'United States':'🇺🇸',
+  'UAE':'🇦🇪', 'United Arab Emirates':'🇦🇪',
+  'Kenya':'🇰🇪', 'KEN':'🇰🇪',
+};
+
+function teamEmoji(name) {
+  if(!name) return '🏏';
+  // Try full name first, then abbreviate
+  if(TEAM_EMO[name]) return TEAM_EMO[name];
+  // Try matching any key that's contained in the name
+  for(const k of Object.keys(TEAM_EMO)) {
+    if(name.includes(k) || k.includes(name)) return TEAM_EMO[k];
+  }
+  return '🏏';
+}
+
+function shortTeam(name) {
+  if(!name) return 'TBA';
+  const abbr = {
+    // IPL
+    'Mumbai Indians':'MI','Chennai Super Kings':'CSK',
+    'Royal Challengers Bengaluru':'RCB','Royal Challengers Bangalore':'RCB',
+    'Kolkata Knight Riders':'KKR','Rajasthan Royals':'RR',
+    'Delhi Capitals':'DC','Punjab Kings':'PBKS',
+    'Sunrisers Hyderabad':'SRH','Gujarat Titans':'GT',
+    'Lucknow Super Giants':'LSG',
+    // T20 World Cup nations
+    'India':'IND','Australia':'AUS','England':'ENG','Pakistan':'PAK',
+    'South Africa':'SA','New Zealand':'NZ','West Indies':'WI',
+    'Sri Lanka':'SL','Bangladesh':'BAN','Afghanistan':'AFG',
+    'Zimbabwe':'ZIM','Ireland':'IRE','Scotland':'SCO',
+    'Netherlands':'NED','Nepal':'NEP','Namibia':'NAM',
+    'Oman':'OMA','Papua New Guinea':'PNG','Uganda':'UGA',
+    'Canada':'CAN','United States of America':'USA','United States':'USA',
+    'United Arab Emirates':'UAE','Kenya':'KEN',
+  };
+  return abbr[name] || name;
+}
+
+function formatMatchTime(dateTimeGMT) {
+  if(!dateTimeGMT) return 'TBA';
+  try {
+    const d = new Date(dateTimeGMT);
+    const now = new Date();
+    const diffDays = Math.floor((d - now) / 86400000);
+    const timeStr = d.toLocaleString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:true, timeZone:'Asia/Kolkata'});
+    if(diffDays < 0) return 'Completed';
+    if(diffDays === 0) return `TODAY ${timeStr} IST`;
+    if(diffDays === 1) return `TOMORROW ${timeStr} IST`;
+    const dateStr = d.toLocaleString('en-IN', {day:'numeric', month:'short', timeZone:'Asia/Kolkata'});
+    return `${dateStr} · ${timeStr} IST`;
+  } catch(e) { return dateTimeGMT; }
+}
+
+function parseMatch(m, idx) {
+  const t1 = shortTeam(m.teams?.[0] || m.t1 || 'TBA');
+  const t2 = shortTeam(m.teams?.[1] || m.t2 || 'TBA');
+  const isLive = m.matchStarted && !m.matchEnded;
+  const score0 = m.score?.[0];
+  const score1 = m.score?.[1];
+  return {
+    id: m.id || 'm'+idx,
+    t1, t2,
+    f1: teamEmoji(m.teams?.[0] || t1),
+    f2: teamEmoji(m.teams?.[1] || t2),
+    status: isLive ? 'live' : 'soon',
+    over: score0?.overs || '—',
+    sc1: score0 ? `${score0.r}/${score0.w} (${score0.overs})` : (isLive ? 'In Progress' : '—'),
+    sc2: score1 ? `${score1.r}/${score1.w} (${score1.overs})` : (isLive ? 'Yet to bat' : '—'),
+    venue: m.venue || 'TBA',
+    when: formatMatchTime(m.dateTimeGMT),
+    label: m.matchType?.toUpperCase() || 'T20',
+    name: m.name || `${t1} vs ${t2}`,
+  };
+}
+
+// Check if match is T20 format
+function isT20(m) {
+  const t = (m.matchType || '').toLowerCase();
+  return t.includes('t20') || t === 't20i';
+}
+
 async function fetchLiveScores() {
   if(!CFG.cricApiKey) { startTicker(); return; }
+
+  const key = CFG.cricApiKey;
+  const BASE = 'https://api.cricapi.com/v1';
+
   try {
-    const r = await fetch(`https://api.cricapi.com/v1/currentMatches?apikey=${CFG.cricApiKey}&offset=0`);
-    const d = await r.json();
-    if(d.status==='success' && d.data?.length) {
-      S.matchData = d.data.slice(0,4).map((m,i)=>({
-        id:'m'+i,
-        t1:m.teams[0]||'TBA',t2:m.teams[1]||'TBA',
-        f1:'🏏',f2:'🏏',
-        status:m.matchStarted&&!m.matchEnded?'live':'soon',
-        over:m.score?.[0]?.overs||'—',
-        sc1:m.score?.[0]?`${m.score[0].r}/${m.score[0].w} (${m.score[0].overs})`:'—',
-        sc2:m.score?.[1]?`${m.score[1].r}/${m.score[1].w} (${m.score[1].overs})`:'—',
-        venue:m.venue||'TBA',
-        when:m.dateTimeGMT?new Date(m.dateTimeGMT).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'TBA',
-        label:'Match'
-      }));
-      renderMatches();
-      // Update ticker with live match
-      const live = S.matchData.find(m=>m.status==='live');
-      if(live) document.getElementById('tickerEl').innerHTML = `<strong>${live.t1}</strong> ${live.sc1} vs ${live.t2} ${live.sc2}`;
+    // Fire all 3 endpoints in parallel
+    const [liveRes, upcomingRes] = await Promise.allSettled([
+      fetch(`${BASE}/currentMatches?apikey=${key}&offset=0`).then(r=>r.json()),
+      fetch(`${BASE}/matches?apikey=${key}&offset=0`).then(r=>r.json()),
+    ]);
+
+    let allMatches = [];
+    const seen = new Set();
+
+    // 1. Live matches first
+    if(liveRes.status==='fulfilled' && liveRes.value?.status==='success') {
+      (liveRes.value.data || []).forEach(m => {
+        if(!seen.has(m.id)) { seen.add(m.id); allMatches.push({...m, _src:'live'}); }
+      });
     }
-  } catch(e){ startTicker(); }
-  // Refresh every 60s
-  setTimeout(fetchLiveScores, 60000);
+
+    // 2. Upcoming fixtures — filter to future matches only
+    if(upcomingRes.status==='fulfilled' && upcomingRes.value?.status==='success') {
+      const now = Date.now();
+      (upcomingRes.value.data || [])
+        .filter(m => {
+          if(seen.has(m.id)) return false;
+          if(m.matchEnded) return false;
+          if(m.dateTimeGMT && new Date(m.dateTimeGMT) < now - 3600000) return false;
+          return true;
+        })
+        .forEach(m => { seen.add(m.id); allMatches.push({...m, _src:'upcoming'}); });
+    }
+
+    if(!allMatches.length) {
+      // API returned nothing — keep demo data & start ticker
+      startTicker();
+      setTimeout(fetchLiveScores, 120000);
+      return;
+    }
+
+    // Sort: live first, then by date
+    allMatches.sort((a,b) => {
+      const aLive = a.matchStarted && !a.matchEnded ? 0 : 1;
+      const bLive = b.matchStarted && !b.matchEnded ? 0 : 1;
+      if(aLive !== bLive) return aLive - bLive;
+      return new Date(a.dateTimeGMT||0) - new Date(b.dateTimeGMT||0);
+    });
+
+    // Take top 6
+    S.matchData = allMatches.slice(0, 6).map(parseMatch);
+    renderMatches();
+
+    // Update ticker
+    const live = S.matchData.find(m=>m.status==='live');
+    const tickerEl = document.getElementById('tickerEl');
+    if(live && tickerEl) {
+      tickerEl.innerHTML = `<strong>${live.t1}</strong> ${live.sc1} vs <strong>${live.t2}</strong> ${live.sc2}`;
+    } else if(tickerEl && S.matchData.length) {
+      const next = S.matchData[0];
+      tickerEl.innerHTML = `Next: <strong>${next.t1} vs ${next.t2}</strong> · ${next.when}`;
+    }
+
+    // Update tournament subtitle
+    const seriesNames = [...new Set(allMatches.slice(0,3).map(m=>m.series||m.name||'').filter(Boolean))];
+    const subEl = document.getElementById('tournamentSub');
+    if(subEl && seriesNames.length) {
+      const haswc = allMatches.some(m=>(m.name||'').toLowerCase().includes('world cup'));
+      subEl.textContent = haswc ? 'T20 WORLD CUP 2026' : 'LIVE CRICKET';
+    }
+
+  } catch(e) {
+    console.warn('CricAPI fetch error:', e);
+    startTicker();
+  }
+
+  // Refresh: every 30s if live match, else every 5 minutes
+  const hasLive = S.matchData.some(m=>m.status==='live');
+  setTimeout(fetchLiveScores, hasLive ? 30000 : 300000);
+}
+
+function scheduleRealMatchReminders(matches) {
+  if(Notification.permission !== 'granted') return;
+  matches.forEach(m => {
+    if(!m.dateTimeGMT) return;
+    const matchTime = new Date(m.dateTimeGMT);
+    const t1 = shortTeam(m.teams?.[0]);
+    const t2 = shortTeam(m.teams?.[1]);
+    const name = `${t1} vs ${t2}`;
+    const ms1hr = matchTime - Date.now() - 3600000;
+    const ms30m = matchTime - Date.now() - 1800000;
+    if(ms1hr > 0) setTimeout(() => showLocalNotif(`🏏 1 Hour Left — ${name}`, `Lock your XI before the toss! ⏰`), ms1hr);
+    if(ms30m > 0) setTimeout(() => showLocalNotif(`🚨 30 Min Left — ${name}`, `Last chance! Pick your captain now 👕`, true), ms30m);
+  });
 }
 
 // ================================================================
 // LIVE TICKER (demo when no API key)
 // ================================================================
 const tickerMsgs = [
-  '<strong>Bumrah</strong> to Dhoni · FOUR! · MI 156/4 (14.3)',
-  '<strong>Jadeja</strong> bowls a tight over · CSK 162/4 (15.6)',
-  '<strong>Hardik</strong> to Gaikwad · WICKET! · LBW · 162/5 (16.1)',
-  '<strong>Bumrah</strong> · Maiden over! · 162/5 (17.0)',
-  '<strong>Dhoni</strong> finishes with a SIX! · CSK 183/5 (20.0)',
-  'CSK need 175 to win · Target set by MI',
+  '<strong>Bumrah</strong> to Warner · BOWLED! · IND 156/4 (14.3)',
+  '<strong>Rashid Khan</strong> takes another one! · AFG closing in',
+  '<strong>Kohli</strong> reaches his fifty · IND 187/2 (19.0)',
+  '<strong>Buttler</strong> smashes a SIX! · ENG 142/3 (16.2)',
+  '<strong>Shaheen Afridi</strong> · Maiden over! · PAK in control',
+  'IND vs PAK — Match of the tournament 🔥',
 ];
 let tickI=0;
 function startTicker() {
