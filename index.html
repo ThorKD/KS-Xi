@@ -1245,21 +1245,35 @@ async function fetchLiveScores() {
     let allMatches = [];
     const seen = new Set();
 
-    // 1. Live matches first
+    // 1. Live/current matches — exclude completed ones
     if(liveRes.status==='fulfilled' && liveRes.value?.status==='success') {
-      (liveRes.value.data || []).forEach(m => {
-        if(!seen.has(m.id)) { seen.add(m.id); allMatches.push({...m, _src:'live'}); }
-      });
+      (liveRes.value.data || [])
+        .filter(m => {
+          if(m.matchEnded) return false;
+          const st = (m.status || '').toLowerCase();
+          if(st.includes('won') || st.includes('abandoned') || st.includes('no result')) return false;
+          return true;
+        })
+        .forEach(m => {
+          if(!seen.has(m.id)) { seen.add(m.id); allMatches.push({...m, _src:'live'}); }
+        });
     }
 
-    // 2. Upcoming fixtures — filter to future matches only
+    // 2. Upcoming fixtures — strictly future only
     if(upcomingRes.status==='fulfilled' && upcomingRes.value?.status==='success') {
       const now = Date.now();
       (upcomingRes.value.data || [])
         .filter(m => {
           if(seen.has(m.id)) return false;
           if(m.matchEnded) return false;
-          if(m.dateTimeGMT && new Date(m.dateTimeGMT) < now - 3600000) return false;
+          // Exclude if result is declared
+          const st = (m.status || '').toLowerCase();
+          if(st.includes('won') || st.includes('abandoned') || st.includes('no result') || st.includes('draw')) return false;
+          // Exclude if match started more than 4 hours ago (it's done)
+          if(m.dateTimeGMT) {
+            const matchTime = new Date(m.dateTimeGMT).getTime();
+            if(matchTime < now - (4 * 60 * 60 * 1000)) return false;
+          }
           return true;
         })
         .forEach(m => { seen.add(m.id); allMatches.push({...m, _src:'upcoming'}); });
