@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#03080f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KD's XI">
+<title>KD's XI — Cricket Fantasy</title>
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===================================================
+   KD'S XI — DESIGN TOKENS
+   =================================================== */
+:root {
+  --bg:       #03080f;
+  --bg2:      #071220;
+  --sur:      #0a1828;
+  --sur2:     #0d2038;
+  --sur3:     #112645;
+  --acc:      #00ff87;
+  --acc2:     #00cc6a;
+  --fire:     #ff4d1c;
+  --gold:     #f5c518;
+  --silver:   #b8c4ce;
+  --bronze:   #cd8c52;
+  --txt:      #ddeeff;
+  --muted:    #4d6e8a;
+  --bdr:      rgba(0,255,135,0.1);
+  --bdr2:     rgba(255,255,255,0.06);
+  --glow:     0 0 28px rgba(0,255,135,0.4);
+  --glow-s:   0 0 14px rgba(0,255,135,0.2);
+  --r:14px; --rs:10px;
+}
+*,::before,::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -5%,rgba(0,255,135,0.06),transparent 65%),radial-gradient(ellipse 60% 40% at 90% 95%,rgba(255,77,28,0.04),transparent);pointer-events:none;z-index:0}
+.app{position:relative;z-index:1;max-width:440px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+
+/* ===================================================
+   SCREENS
+   =================================================== */
+.screen{display:none;flex-direction:column;flex:1}
+.screen.on{display:flex}
+
+/* ===================================================
+   AUTH
+   =================================================== */
+.auth-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
+.auth-logo{font-family:'Bebas Neue',sans-serif;font-size:76px;letter-spacing:4px;line-height:.9;background:linear-gradient(135deg,var(--acc),var(--fire));-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:popIn .8s cubic-bezier(0.34,1.56,0.64,1) both}
+@keyframes popIn{from{opacity:0;transform:scale(.65) translateY(24px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.auth-tag{font-size:11px;letter-spacing:4px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:36px;animation:fadeUp .5s .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.auth-ball{font-size:72px;display:block;margin-bottom:28px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+.auth-form{width:100%;animation:fadeUp .5s .5s ease both}
+.form-label{display:block;font-size:10px;letter-spacing:2px;color:var(--muted);font-family:'JetBrains Mono',monospace;text-align:left;margin-bottom:7px}
+.form-input{width:100%;background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--r);padding:14px 16px;color:var(--txt);font-family:'Syne',sans-serif;font-size:15px;margin-bottom:12px;outline:none;transition:border-color .2s,box-shadow .2s}
+.form-input:focus{border-color:var(--acc);box-shadow:var(--glow-s)}
+.form-input::placeholder{color:var(--muted)}
+.form-input.err{border-color:var(--fire)}
+.emoji-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.emo{font-size:26px;background:var(--sur);border:2px solid var(--bdr2);border-radius:10px;padding:6px 10px;cursor:pointer;transition:all .15s;line-height:1}
+.emo:hover{border-color:var(--acc);transform:scale(1.08)}
+.emo.picked{border-color:var(--acc);background:rgba(0,255,135,.1)}
+.btn-big{width:100%;padding:15px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:var(--bg);border:none;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.5px;transition:all .2s;margin-bottom:12px}
+.btn-big:hover{transform:translateY(-2px);box-shadow:var(--glow)}
+.btn-big:active{transform:none}
+.btn-big:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.divider{display:flex;align-items:center;gap:10px;margin:2px 0 12px;color:var(--muted);font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--bdr2)}
+.btn-ghost{width:100%;padding:13px;background:none;border:1px solid var(--bdr2);border-radius:var(--r);color:var(--muted);font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-ghost:hover{border-color:var(--acc);color:var(--acc)}
+.auth-note{font-size:11px;color:var(--muted);margin-top:22px;line-height:1.7}
+.auth-tabs{display:flex;background:var(--sur);border-radius:var(--r);padding:4px;margin-bottom:20px;gap:4px}
+.auth-tab{flex:1;padding:9px;border:none;background:none;border-radius:var(--rs);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s}
+.auth-tab.on{background:var(--sur3);color:var(--txt)}
+
+/* ===================================================
+   HEADER
+   =================================================== */
+.hdr{padding:11px 16px 9px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bdr2);position:sticky;top:0;background:rgba(3,8,15,.93);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:100}
+.logo-txt{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;background:linear-gradient(135deg,var(--acc),var(--fire));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+.logo-sub{font-size:8px;letter-spacing:3px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.hdr-r{display:flex;align-items:center;gap:8px}
+.usr-pill{display:flex;align-items:center;gap:6px;background:var(--sur);border:1px solid var(--bdr);border-radius:24px;padding:5px 12px 5px 6px;cursor:pointer;transition:all .2s}
+.usr-pill:hover{border-color:var(--acc)}
+.usr-em{font-size:18px}
+.usr-pts{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--acc);font-weight:700}
+.notif{width:34px;height:34px;background:var(--sur);border:1px solid var(--bdr2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;position:relative;transition:all .2s}
+.notif:hover{border-color:var(--acc)}
+.notif-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;background:var(--fire);border-radius:50%;border:2px solid var(--bg)}
+
+/* ===================================================
+   BOTTOM NAV
+   =================================================== */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;background:rgba(7,18,32,.97);backdrop-filter:blur(20px);border-top:1px solid var(--bdr2);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0)}
+.ni{flex:1;padding:9px 2px 7px;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--muted);font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;position:relative;transition:color .2s}
+.ni-ico{font-size:20px;transition:transform .2s}
+.ni.on{color:var(--acc)}
+.ni.on .ni-ico{transform:scale(1.15)}
+.ni.on::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:0 0 3px 3px;box-shadow:0 0 8px var(--acc)}
+
+/* ===================================================
+   PAGES
+   =================================================== */
+.page{display:none;flex:1;overflow-y:auto;padding-bottom:76px}
+.page.on{display:block;animation:fadeUp .22s ease both}
+
+/* ===================================================
+   SHARED
+   =================================================== */
+.sh{padding:18px 16px 12px;display:flex;align-items:baseline;justify-content:space-between}
+.st{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1.5px}
+.ss{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.card{margin:0 14px 10px;background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--r);overflow:hidden}
+.pills{display:flex;gap:7px;padding:0 14px 12px;overflow-x:auto}
+.pills::-webkit-scrollbar{display:none}
+.pill{flex-shrink:0;padding:6px 13px;border-radius:20px;border:1px solid var(--bdr2);background:none;color:var(--muted);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+.pill.on{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+.btn-act{display:block;width:100%;padding:14px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:var(--bg);border:none;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.5px;transition:all .2s;text-align:center}
+.btn-act:hover{transform:translateY(-1px);box-shadow:var(--glow)}
+.btn-act:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-out{padding:10px 16px;background:none;border:1px solid var(--bdr2);border-radius:var(--rs);color:var(--muted);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-out:hover{border-color:var(--acc);color:var(--acc)}
+
+/* ===================================================
+   SETUP BANNER (shows if keys not configured)
+   =================================================== */
+.setup-banner{margin:14px;background:linear-gradient(135deg,rgba(245,197,24,.1),rgba(245,197,24,.03));border:1px solid rgba(245,197,24,.3);border-radius:var(--r);padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
+.sb-icon{font-size:22px;flex-shrink:0}
+.sb-body{flex:1;font-size:12px;line-height:1.7;color:var(--muted)}
+.sb-body strong{color:var(--txt);display:block;margin-bottom:2px}
+.sb-body a{color:var(--acc);text-decoration:none}
+.sb-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0}
+
+/* ===================================================
+   MATCH CARDS
+   =================================================== */
+.mc{margin:0 14px 12px;border-radius:var(--r);overflow:hidden;border:1px solid var(--bdr2);cursor:pointer;transition:transform .2s,box-shadow .2s}
+.mc:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,255,135,.07)}
+.mc-banner{background:linear-gradient(155deg,#081830,#0d2545);padding:16px 18px 12px;position:relative;overflow:hidden}
+.mc-banner::after{content:'🏏';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:46px;opacity:.07;pointer-events:none}
+.mc-status{font-size:10px;letter-spacing:2px;font-family:'JetBrains Mono',monospace;margin-bottom:11px}
+.mc-status.live{color:var(--fire)}
+.mc-status.live::before{content:'⬤ ';animation:blink 1.2s infinite}
+.mc-status.soon{color:var(--acc)}
+@keyframes blink{50%{opacity:.2}}
+.teams{display:flex;align-items:center;justify-content:space-between}
+.team{text-align:center}
+.t-em{font-size:26px}
+.t-n{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-top:2px}
+.t-sc{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acc);margin-top:2px;min-height:16px}
+.vs{font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--muted)}
+.mc-foot{padding:10px 18px;display:flex;align-items:center;justify-content:space-between}
+.mc-meta{font-size:11px;color:var(--muted)}
+.mc-btn{padding:7px 18px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:var(--bg);border:none;border-radius:20px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s}
+.mc-btn:hover{box-shadow:var(--glow-s)}
+
+/* Live ticker */
+.ticker{margin:0 14px 12px;background:rgba(255,77,28,.07);border:1px solid rgba(255,77,28,.2);border-radius:var(--rs);padding:10px 14px;display:flex;align-items:center;gap:10px}
+.tick-dot{width:8px;height:8px;background:var(--fire);border-radius:50%;animation:blink 1s infinite;flex-shrink:0}
+.tick-txt{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--silver)}
+.tick-txt strong{color:var(--fire)}
+
+/* ===================================================
+   TEAM BUILDER
+   =================================================== */
+.bud{margin:0 14px 12px;background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--r);padding:13px 15px;display:flex;align-items:center;gap:12px}
+.bud-v{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1.1}
+.bud-v.g{color:var(--acc)}.bud-v.y{color:var(--gold)}.bud-v.r{color:var(--fire)}
+.bud-l{font-size:9px;letter-spacing:2px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.bud-bar{flex:1;height:5px;background:var(--sur3);border-radius:3px;overflow:hidden}
+.bud-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .4s cubic-bezier(.4,0,.2,1)}
+.pg{padding:0 14px;display:flex;flex-direction:column;gap:8px}
+.pc{background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--r);padding:12px 13px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:all .2s;position:relative}
+.pc:hover{border-color:rgba(0,255,135,.3);background:var(--sur2)}
+.pc.sel{border-color:var(--acc);background:rgba(0,255,135,.05)}
+.pc.sel::after{content:'✓';position:absolute;top:12px;right:13px;color:var(--acc);font-weight:800;font-size:14px}
+.pc.dim{opacity:.38;cursor:not-allowed}
+.pav{width:44px;height:44px;border-radius:50%;background:var(--sur2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.pin{flex:1;min-width:0}
+.pn{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pm{display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap}
+.pt{font-size:11px;color:var(--muted)}
+.rb{font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;letter-spacing:.5px;flex-shrink:0}
+.r-wk{background:rgba(245,197,24,.14);color:var(--gold)}
+.r-bat{background:rgba(0,255,135,.1);color:var(--acc)}
+.r-ar{background:rgba(255,77,28,.1);color:var(--fire)}
+.r-bo{background:rgba(90,120,150,.18);color:var(--silver)}
+.pch{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
+.ch{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted);background:var(--sur2);padding:2px 5px;border-radius:4px}
+.ch.hot{color:var(--fire);background:rgba(255,77,28,.1)}
+.pcr{text-align:right;flex-shrink:0}
+.pcv{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);line-height:1}
+.pcl{font-size:9px;color:var(--muted)}
+
+/* ===================================================
+   PITCH
+   =================================================== */
+.pitch-wrap{padding:14px}
+.pitch{background:linear-gradient(180deg,#163520,#0e2918 50%,#163520);border-radius:20px;padding:20px 8px;position:relative;overflow:hidden;min-height:360px}
+.pitch::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(255,255,255,.018) 40px,rgba(255,255,255,.018) 41px)}
+.pitch::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:36px;height:72px;border:1px solid rgba(255,255,255,.09);border-radius:3px}
+.pr{display:flex;justify-content:center;gap:8px;margin-bottom:14px;position:relative;z-index:1}
+.pp{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+.pp-av{width:50px;height:50px;border-radius:50%;background:rgba(10,24,40,.92);border:2px solid rgba(0,255,135,.18);display:flex;align-items:center;justify-content:center;font-size:22px;position:relative;transition:all .2s}
+.pp:hover .pp-av{border-color:var(--acc);transform:scale(1.06)}
+.pp-av.cap::after{content:'C';position:absolute;bottom:-3px;right:-3px;background:var(--gold);color:#000;width:18px;height:18px;border-radius:50%;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif}
+.pp-av.vc::after{content:'V';position:absolute;bottom:-3px;right:-3px;background:var(--acc);color:#000;width:18px;height:18px;border-radius:50%;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif}
+.pp-n{font-size:10px;font-weight:700;text-align:center;max-width:56px;line-height:1.2;color:rgba(255,255,255,.9)}
+.pp-p{font-size:9px;color:var(--acc);font-family:'JetBrains Mono',monospace}
+.pzl{position:absolute;font-size:9px;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,.18);letter-spacing:2px}
+.pzl.t{top:13px;left:50%;transform:translateX(-50%)}
+.pzl.b{bottom:13px;left:50%;transform:translateX(-50%)}
+.cv-hint{background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--r);padding:12px 15px;margin-top:12px;display:flex;align-items:center;justify-content:space-between}
+.cv-hint span{font-size:12px;color:var(--muted)}
+.cv-lbl{font-size:11px;font-family:'JetBrains Mono',monospace}
+.cv-lbl.c{color:var(--gold)}.cv-lbl.v{color:var(--acc)}
+
+/* ===================================================
+   LEADERBOARD
+   =================================================== */
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:10px;padding:14px 14px 18px}
+.pod{display:flex;flex-direction:column;align-items:center;gap:5px}
+.pod-av{font-size:28px}
+.pod-n{font-size:11px;font-weight:700;text-align:center;max-width:72px}
+.pod-p{font-size:10px;color:var(--acc);font-family:'JetBrains Mono',monospace}
+.pod-blk{width:80px;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:22px}
+.p1{height:70px;background:linear-gradient(180deg,rgba(245,197,24,.25),rgba(245,197,24,.05));color:var(--gold);border:1px solid rgba(245,197,24,.3);border-bottom:none}
+.p2{height:50px;background:linear-gradient(180deg,rgba(184,196,206,.2),rgba(184,196,206,.04));color:var(--silver);border:1px solid rgba(184,196,206,.25);border-bottom:none}
+.p3{height:35px;background:linear-gradient(180deg,rgba(205,140,82,.2),rgba(205,140,82,.04));color:var(--bronze);border:1px solid rgba(205,140,82,.25);border-bottom:none}
+.rr{margin:0 14px 8px;background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--r);padding:12px 13px;display:flex;align-items:center;gap:11px;transition:transform .2s}
+.rr:hover{transform:translateX(3px)}
+.rr.me{border-color:var(--acc);background:rgba(0,255,135,.04)}
+.rk{font-family:'Bebas Neue',sans-serif;font-size:22px;width:28px;text-align:center;flex-shrink:0;color:var(--muted)}
+.rk.g{color:var(--gold)}.rk.s{color:var(--silver)}.rk.b{color:var(--bronze)}
+.rav{font-size:24px;flex-shrink:0}
+.ri{flex:1}
+.rn{font-weight:700;font-size:13px}
+.rte{font-size:11px;color:var(--muted);margin-top:1px}
+.me-tag{font-size:8px;color:var(--acc);font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:1px;background:rgba(0,255,135,.1);padding:2px 5px;border-radius:3px}
+.rp{text-align:right;flex-shrink:0}
+.rp-v{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--acc);line-height:1}
+.rp-l{font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.lb-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;line-height:1.7}
+
+/* ===================================================
+   LEAGUES
+   =================================================== */
+.lc{margin:0 14px 12px;background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--r);overflow:hidden}
+.lc-h{padding:13px 15px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--bdr2)}
+.lc-ico{font-size:26px}
+.lc-n{font-weight:700;font-size:15px}
+.lc-c{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.lc-b{padding:11px 15px;display:flex;align-items:center;gap:8px}
+.mv{font-size:20px;margin-right:-4px}
+.mc2{font-size:11px;color:var(--muted);margin-left:10px}
+.lc-rk{margin-left:auto;text-align:right}
+.lc-rv{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--acc);line-height:1}
+.lc-rl{font-size:10px;color:var(--muted)}
+.lc-rl.lead{color:var(--gold)}
+.lc-f{padding:10px 15px;border-top:1px solid var(--bdr2);display:flex;gap:8px}
+.cre-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 14px 12px;padding:16px;background:rgba(0,255,135,.05);border:1px dashed rgba(0,255,135,.28);border-radius:var(--r);color:var(--acc);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:calc(100% - 28px);transition:all .2s}
+.cre-btn:hover{background:rgba(0,255,135,.1);box-shadow:var(--glow-s)}
+
+/* ===================================================
+   STATS
+   =================================================== */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 14px}
+.sc{background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--r);padding:15px 13px;text-align:center}
+.sc-ico{font-size:22px;margin-bottom:5px}
+.sc-v{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--acc);line-height:1}
+.sc-l{font-size:11px;color:var(--muted);margin-top:3px}
+.tp-r{margin:0 14px 8px;background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--r);padding:11px 13px;display:flex;align-items:center;gap:11px}
+.tpr-k{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--muted);width:22px;flex-shrink:0}
+.tpr-e{font-size:22px;flex-shrink:0}
+.tpr-i{flex:1}
+.tpr-n{font-weight:700;font-size:13px}
+.tpr-s{font-size:11px;color:var(--muted)}
+.form-dots{display:flex;gap:3px;margin-top:4px}
+.fd{width:12px;height:12px;border-radius:50%;background:var(--sur3)}
+.fd.w{background:var(--acc)}.fd.l{background:rgba(255,77,28,.4)}
+.tpr-p{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--acc);font-weight:700;flex-shrink:0}
+.pts-tbl{margin:0 14px 14px;background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--r);overflow:hidden}
+.pts-tbl-h{padding:9px 14px;display:flex;justify-content:space-between;background:var(--sur2);font-size:10px;letter-spacing:2px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.pts-tbl-r{padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--bdr2);font-size:13px}
+.pts-v{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700}
+.pos{color:var(--acc)}.neg{color:var(--fire)}
+
+/* ===================================================
+   PROFILE
+   =================================================== */
+.prof-hero{margin:14px;background:linear-gradient(135deg,#081830,#102040);border:1px solid var(--bdr2);border-radius:20px;padding:22px 18px;display:flex;align-items:center;gap:14px}
+.ph-av{font-size:50px}
+.ph-n{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px}
+.ph-h{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.pg2{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 14px 14px}
+.ps{background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--r);padding:13px;text-align:center}
+.ps-v{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--acc);line-height:1}
+.ps-l{font-size:10px;color:var(--muted);margin-top:2px}
+.set-list{padding:0 14px;display:flex;flex-direction:column;gap:8px}
+.set-r{background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--r);padding:13px 15px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:all .2s}
+.set-r:hover{border-color:var(--bdr)}
+.set-ico{font-size:20px;flex-shrink:0}
+.set-txt{flex:1}
+.set-lbl{font-weight:700;font-size:13px}
+.set-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.set-val{font-size:12px;color:var(--acc);font-family:'JetBrains Mono',monospace}
+.api-chip{display:flex;align-items:center;gap:5px;font-size:11px}
+.api-dot{width:7px;height:7px;border-radius:50%}
+.api-dot.live{background:var(--acc);box-shadow:0 0 6px var(--acc)}.api-dot.demo{background:var(--gold)}
+.logout{margin:14px;padding:13px;background:rgba(255,77,28,.08);border:1px solid rgba(255,77,28,.22);border-radius:var(--r);color:var(--fire);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:calc(100% - 28px);transition:all .2s}
+.logout:hover{background:rgba(255,77,28,.14)}
+
+/* ===================================================
+   SHEETS
+   =================================================== */
+.ovl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:flex-end;justify-content:center}
+.ovl.on{display:flex;animation:fadeIn .18s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.sheet{background:var(--sur);border-radius:24px 24px 0 0;padding:22px 18px 40px;width:100%;max-width:440px;animation:slideUp .3s cubic-bezier(.34,1.2,.64,1);max-height:85vh;overflow-y:auto}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sh-hdl{width:40px;height:4px;background:var(--sur3);border-radius:2px;margin:0 auto 20px}
+.sh-t{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;margin-bottom:3px}
+.sh-s{font-size:13px;color:var(--muted);margin-bottom:18px}
+.sh-btns{display:flex;gap:9px;margin-top:6px}
+
+/* ===================================================
+   TOAST
+   =================================================== */
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--sur);border:1px solid var(--acc);color:var(--acc);padding:11px 22px;border-radius:30px;font-weight:700;font-size:13px;z-index:400;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:var(--glow);pointer-events:none}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.toast.err{background:rgba(255,77,28,.15);border-color:var(--fire);color:var(--fire);box-shadow:0 0 24px rgba(255,77,28,.3)}
+
+/* ===================================================
+   INSTALL BANNER
+   =================================================== */
+.inst-ban{margin:0 14px 12px;background:rgba(0,255,135,.06);border:1px solid var(--bdr);border-radius:var(--r);padding:13px 14px;display:flex;align-items:center;gap:10px}
+.ib-ico{font-size:26px;flex-shrink:0}
+.ib-t{font-weight:700;font-size:13px}
+.ib-s{font-size:11px;color:var(--muted);margin-top:1px}
+.ib-btn{padding:8px 15px;background:var(--acc);color:var(--bg);border:none;border-radius:20px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0;transition:all .2s}
+.ib-btn:hover{box-shadow:var(--glow-s)}
+.ib-x{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0}
+
+/* loading spinner */
+.spin{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--acc);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ============================================================
+     AUTH SCREEN
+     ============================================================ -->
+<div class="screen on" id="authScreen">
+<div class="auth-wrap">
+  <div class="auth-logo">KD's XI</div>
+  <div class="auth-tag">Cricket Fantasy · Friends Only</div>
+  <span class="auth-ball">🏏</span>
+
+  <div class="auth-form">
+    <!-- Login / Signup tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab on" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+
+    <!-- Sign Up fields (hidden initially) -->
+    <div id="signupFields" style="display:none">
+      <label class="form-label">YOUR NAME</label>
+      <input class="form-input" id="authName" placeholder="e.g. Vikram K." maxlength="24" type="text">
+      <label class="form-label">PICK YOUR EMOJI</label>
+      <div class="emoji-grid" id="emojiGrid">
+        <button class="emo picked" onclick="pickEmo(this,'🦁')">🦁</button>
+        <button class="emo" onclick="pickEmo(this,'🐯')">🐯</button>
+        <button class="emo" onclick="pickEmo(this,'🦊')">🦊</button>
+        <button class="emo" onclick="pickEmo(this,'🦅')">🦅</button>
+        <button class="emo" onclick="pickEmo(this,'🐉')">🐉</button>
+        <button class="emo" onclick="pickEmo(this,'🦄')">🦄</button>
+        <button class="emo" onclick="pickEmo(this,'🐺')">🐺</button>
+        <button class="emo" onclick="pickEmo(this,'🦋')">🦋</button>
+        <button class="emo" onclick="pickEmo(this,'🐲')">🐲</button>
+        <button class="emo" onclick="pickEmo(this,'🦁')">🏆</button>
+      </div>
+    </div>
+
+    <label class="form-label">EMAIL</label>
+    <input class="form-input" id="authEmail" placeholder="you@example.com" type="email">
+    <label class="form-label">PASSWORD</label>
+    <input class="form-input" id="authPass" placeholder="Min 8 characters" type="password">
+
+    <button class="btn-big" id="authBtn" onclick="doAuth()">🏏 Enter KD's XI</button>
+    <div class="divider">or</div>
+    <button class="btn-ghost" onclick="doGuest()">Continue as Guest (Demo Mode)</button>
+  </div>
+  <p class="auth-note">
+    Powered by Supabase · Real-time multiplayer leagues<br>
+    No real money · Just cricket & bragging rights 🏆
+  </p>
+</div>
+</div>
+
+<!-- ============================================================
+     MAIN SCREEN
+     ============================================================ -->
+<div class="screen" id="mainScreen">
+
+  <!-- HEADER -->
+  <header class="hdr">
+    <div>
+      <div class="logo-txt">KD's XI</div>
+      <div class="logo-sub">CRICKET FANTASY</div>
+    </div>
+    <div class="hdr-r">
+      <div class="usr-pill" onclick="nav('profile')">
+        <span class="usr-em" id="hdrEm">🦁</span>
+        <span class="usr-pts" id="hdrPts">—</span>
+      </div>
+      <div class="notif" onclick="showNotifs()">🔔<div class="notif-dot"></div></div>
+    </div>
+  </header>
+
+  <!-- ===================== PAGE: MATCHES ===================== -->
+  <div class="page on" id="pg-home">
+    <div class="sh"><div class="st">MATCHES</div><div class="ss">IPL 2025</div></div>
+
+    <!-- Install Banner -->
+    <div class="inst-ban" id="installBan">
+      <div class="ib-ico">📲</div>
+      <div style="flex:1"><div class="ib-t">Install KD's XI</div><div class="ib-s">Add to home screen · Play like a native app</div></div>
+      <button class="ib-btn" onclick="triggerInstall()">Install</button>
+      <button class="ib-x" onclick="this.closest('.inst-ban').style.display='none'">✕</button>
+    </div>
+
+    <!-- Live ticker -->
+    <div class="ticker">
+      <div class="tick-dot"></div>
+      <div class="tick-txt" id="tickerEl">Fetching live score...</div>
+    </div>
+
+    <!-- Matches list -->
+    <div id="matchList">
+      <!-- Populated by JS -->
+    </div>
+
+    <div style="margin:0 14px;padding:12px 15px;background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--r);display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);">
+      <span style="font-size:18px">🔗</span>
+      <div>Add CricAPI key in <strong style="color:var(--txt);cursor:pointer" onclick="nav('profile');openSheet('apiSheet')">Settings → CricAPI</strong> for real live scores</div>
+    </div>
+  </div>
+
+  <!-- ===================== PAGE: MY XI ===================== -->
+  <div class="page" id="pg-team">
+    <div class="sh">
+      <div class="st">MY <span id="matchLbl">XI</span></div>
+      <div class="ss" id="teamSub">0 / 11 players</div>
+    </div>
+
+    <!-- Budget bar -->
+    <div class="bud">
+      <div><div class="bud-l">CREDITS</div><div class="bud-v g" id="credEl">100</div></div>
+      <div class="bud-bar"><div class="bud-fill" id="budFill" style="width:100%"></div></div>
+      <div style="text-align:right"><div class="bud-l">PICKED</div><div class="bud-v" id="selEl" style="color:var(--txt)">0/11</div></div>
+    </div>
+
+    <!-- Role filter -->
+    <div class="pills" id="roleFilters">
+      <button class="pill on" onclick="filterRole('ALL',this)">All</button>
+      <button class="pill" onclick="filterRole('WK',this)">🧤 WK</button>
+      <button class="pill" onclick="filterRole('BAT',this)">🏏 Batters</button>
+      <button class="pill" onclick="filterRole('AR',this)">⚡ All-Rounders</button>
+      <button class="pill" onclick="filterRole('BOWL',this)">🎯 Bowlers</button>
+    </div>
+
+    <div class="pg" id="playerGrid"></div>
+
+    <div style="padding:14px 14px 0" id="viewPitchBtn" style="display:none">
+      <button class="btn-act" id="pitchCTA" onclick="showPitch()" style="display:none">VIEW XI ON PITCH →</button>
+    </div>
+
+    <!-- PITCH (hidden until 11 picked) -->
+    <div id="pitchWrap" style="display:none">
+      <div class="pitch-wrap">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="st" style="font-size:20px">PLAYING XI</div>
+          <button onclick="backToSelect()" style="font-size:12px;color:var(--acc);background:none;border:none;cursor:pointer;font-weight:700">← Edit</button>
+        </div>
+        <div class="pitch" id="pitchField">
+          <span class="pzl t">BOWLERS</span>
+          <span class="pzl b">KEEPER</span>
+        </div>
+        <div class="cv-hint">
+          <span>Tap player → set Captain</span>
+          <div style="display:flex;gap:12px">
+            <span class="cv-lbl c">C = 2× pts</span>
+            <span class="cv-lbl v">VC = 1.5× pts</span>
+          </div>
+        </div>
+        <div style="padding-top:12px">
+          <button class="btn-act" onclick="lockTeam()">🔒 LOCK TEAM</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PAGE: LEADERBOARD ===================== -->
+  <div class="page" id="pg-leaderboard">
+    <div class="sh"><div class="st">RANKINGS</div><div class="ss" id="lbSub">Select a league</div></div>
+    <div class="pills" id="lgPills"><!-- populated --></div>
+    <div id="lbBody"></div>
+  </div>
+
+  <!-- ===================== PAGE: LEAGUES ===================== -->
+  <div class="page" id="pg-leagues">
+    <div class="sh"><div class="st">LEAGUES</div><div class="ss" id="leagueSub">Loading...</div></div>
+    <button class="cre-btn" onclick="openSheet('leagueSheet')">＋ Create or Join a League</button>
+    <div id="leagueList">
+      <div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px">
+        <div class="spin" style="margin:0 auto 12px"></div>
+        Loading your leagues...
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PAGE: STATS ===================== -->
+  <div class="page" id="pg-stats">
+    <div class="sh"><div class="st">STATS</div><div class="ss">Season 2025</div></div>
+    <div class="sg">
+      <div class="sc"><div class="sc-ico">🏏</div><div class="sc-v" id="st-pts">—</div><div class="sc-l">Total Points</div></div>
+      <div class="sc"><div class="sc-ico">🥇</div><div class="sc-v" id="st-rank">—</div><div class="sc-l">Best Rank</div></div>
+      <div class="sc"><div class="sc-ico">✅</div><div class="sc-v" id="st-m">0</div><div class="sc-l">Matches Played</div></div>
+      <div class="sc"><div class="sc-ico">🔥</div><div class="sc-v" id="st-hi">—</div><div class="sc-l">Highest Match Pts</div></div>
+      <div class="sc"><div class="sc-ico">🎯</div><div class="sc-v" id="st-wr">—</div><div class="sc-l">Win Rate</div></div>
+      <div class="sc"><div class="sc-ico">⭐</div><div class="sc-v" id="st-pp">—</div><div class="sc-l">Perfect Picks</div></div>
+    </div>
+
+    <div class="sh" style="padding-top:4px"><div class="st" style="font-size:20px">TOP PERFORMERS</div></div>
+    <div id="tpList"></div>
+
+    <div class="sh" style="padding-top:4px"><div class="st" style="font-size:20px">POINTS GUIDE</div></div>
+    <div class="pts-tbl">
+      <div class="pts-tbl-h"><span>ACTION</span><span>POINTS</span></div>
+      <div class="pts-tbl-r"><span>Run scored</span><span class="pts-v pos">+1</span></div>
+      <div class="pts-tbl-r"><span>Boundary (4)</span><span class="pts-v pos">+1 bonus</span></div>
+      <div class="pts-tbl-r"><span>Six (6)</span><span class="pts-v pos">+2 bonus</span></div>
+      <div class="pts-tbl-r"><span>Half century (50+)</span><span class="pts-v pos">+8</span></div>
+      <div class="pts-tbl-r"><span>Century (100+)</span><span class="pts-v pos">+16</span></div>
+      <div class="pts-tbl-r"><span>Wicket taken</span><span class="pts-v pos">+25</span></div>
+      <div class="pts-tbl-r"><span>3-wicket haul</span><span class="pts-v pos">+4 bonus</span></div>
+      <div class="pts-tbl-r"><span>5-wicket haul</span><span class="pts-v pos">+8 bonus</span></div>
+      <div class="pts-tbl-r"><span>Maiden over</span><span class="pts-v pos">+8</span></div>
+      <div class="pts-tbl-r"><span>Catch / Stumping</span><span class="pts-v pos">+8</span></div>
+      <div class="pts-tbl-r"><span>Run out (direct)</span><span class="pts-v pos">+12</span></div>
+      <div class="pts-tbl-r"><span>Run out (assist)</span><span class="pts-v pos">+6</span></div>
+      <div class="pts-tbl-r"><span>Captain multiplier</span><span class="pts-v pos">2×</span></div>
+      <div class="pts-tbl-r"><span>VC multiplier</span><span class="pts-v pos">1.5×</span></div>
+      <div class="pts-tbl-r"><span>Duck (batsman)</span><span class="pts-v neg">−2</span></div>
+      <div class="pts-tbl-r"><span>No-ball bowled</span><span class="pts-v neg">−2</span></div>
+    </div>
+  </div>
+
+  <!-- ===================== PAGE: PROFILE ===================== -->
+  <div class="page" id="pg-profile">
+    <div class="sh"><div class="st">PROFILE</div></div>
+    <div class="prof-hero">
+      <div class="ph-av" id="profEm">🦁</div>
+      <div>
+        <div class="ph-n" id="profName">—</div>
+        <div class="ph-h" id="profHandle">@— · KD's XI</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Playing since 2025</div>
+      </div>
+    </div>
+    <div class="pg2">
+      <div class="ps"><div class="ps-v" id="pp-pts">—</div><div class="ps-l">Total Pts</div></div>
+      <div class="ps"><div class="ps-v" id="pp-rk">—</div><div class="ps-l">Best Rank</div></div>
+      <div class="ps"><div class="ps-v" id="pp-m">0</div><div class="ps-l">Matches</div></div>
+    </div>
+    <div class="set-list">
+      <div class="set-r" onclick="openSheet('apiSheet')">
+        <div class="set-ico">🔗</div>
+        <div class="set-txt"><div class="set-lbl">CricAPI Integration</div><div class="set-sub">Real live scores & player data</div></div>
+        <div class="api-chip"><div class="api-dot demo" id="apiDot"></div><span id="apiStatus" style="font-size:11px;color:var(--gold)">Demo</span></div>
+      </div>
+      <div class="set-r" onclick="openSheet('supaSheet')">
+        <div class="set-ico">🗄️</div>
+        <div class="set-txt"><div class="set-lbl">Supabase Backend</div><div class="set-sub">Real-time multiplayer database</div></div>
+        <div class="api-chip"><div class="api-dot demo" id="supaDot"></div><span id="supaStatus" style="font-size:11px;color:var(--gold)">Not Set</span></div>
+      </div>
+      <div class="set-r" onclick="shareApp()">
+        <div class="set-ico">🔗</div>
+        <div class="set-txt"><div class="set-lbl">Invite Friends</div><div class="set-sub">Share KD's XI with your squad</div></div>
+        <div style="color:var(--muted);font-size:16px">›</div>
+      </div>
+      <div class="set-r" onclick="openSheet('notifSheet')">
+        <div class="set-ico">🔔</div>
+        <div class="set-txt"><div class="set-lbl">Notifications</div><div class="set-sub">Match alerts, rank changes</div></div>
+        <span class="set-val">ON</span>
+      </div>
+      <div class="set-r" onclick="openSheet('howSheet')">
+        <div class="set-ico">📋</div>
+        <div class="set-txt"><div class="set-lbl">How to Set Up Live Data</div><div class="set-sub">Step-by-step API guide</div></div>
+        <div style="color:var(--muted);font-size:16px">›</div>
+      </div>
+    </div>
+    <button class="logout" onclick="doLogout()">Sign Out</button>
+    <div style="text-align:center;font-size:11px;color:var(--muted);padding:10px;font-family:'JetBrains Mono',monospace">KD's XI v2.0 · Built with ❤️ for cricket lovers</div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bnav">
+    <button class="ni on" onclick="nav('home')"><span class="ni-ico">🏟️</span>Matches</button>
+    <button class="ni" onclick="nav('team')"><span class="ni-ico">👕</span>My XI</button>
+    <button class="ni" onclick="nav('leaderboard')"><span class="ni-ico">🥇</span>Ranks</button>
+    <button class="ni" onclick="nav('leagues')"><span class="ni-ico">🏅</span>Leagues</button>
+    <button class="ni" onclick="nav('stats')"><span class="ni-ico">📊</span>Stats</button>
+  </nav>
+</div><!-- /mainScreen -->
+
+</div><!-- /app -->
+
+<!-- ============================================================
+     SHEETS
+     ============================================================ -->
+
+<!-- League Sheet -->
+<div class="ovl" id="leagueSheet" onclick="ovlClose(event,'leagueSheet')">
+<div class="sheet">
+  <div class="sh-hdl"></div>
+  <div class="sh-t">Join or Create</div>
+  <div class="sh-s">Private leagues for your squad</div>
+  <label class="form-label">LEAGUE NAME (to create)</label>
+  <input class="form-input" id="lgName" placeholder="e.g. KD's Champions 2025">
+  <label class="form-label" style="margin-top:4px">INVITE CODE (to join)</label>
+  <input class="form-input" id="lgCode" placeholder="e.g. LGND2025">
+  <div class="sh-btns">
+    <button class="btn-out" onclick="closeSheet('leagueSheet')">Cancel</button>
+    <button class="btn-act" style="flex:1" onclick="createOrJoinLeague()">Go 🚀</button>
+  </div>
+</div>
+</div>
+
+<!-- CricAPI Sheet -->
+<div class="ovl" id="apiSheet" onclick="ovlClose(event,'apiSheet')">
+<div class="sheet">
+  <div class="sh-hdl"></div>
+  <div class="sh-t">CricAPI Setup</div>
+  <div class="sh-s">Connect real live cricket data</div>
+  <div style="background:rgba(0,255,135,.05);border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 14px;font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:14px">
+    <strong style="color:var(--txt);display:block;margin-bottom:4px">🔑 Get your free key:</strong>
+    1. Go to <a href="https://cricketdata.org" target="_blank" style="color:var(--acc)">cricketdata.org</a> → Sign Up (free)<br>
+    2. Dashboard → Copy your <strong style="color:var(--txt)">API Key</strong><br>
+    3. Free plan: Current matches, scores, player data<br>
+    <br>
+    <strong style="color:var(--txt)">Endpoints used:</strong><br>
+    • <code style="color:var(--acc);font-family:'JetBrains Mono',monospace;font-size:10px">GET /v1/currentMatches</code> — Live matches<br>
+    • <code style="color:var(--acc);font-family:'JetBrains Mono',monospace;font-size:10px">GET /v1/match_scorecard</code> — Ball by ball<br>
+    • <code style="color:var(--acc);font-family:'JetBrains Mono',monospace;font-size:10px">GET /v1/players</code> — Player pool & credits
+  </div>
+  <label class="form-label">YOUR CRICAPI KEY</label>
+  <input class="form-input" id="apiKeyIn" placeholder="Paste key here..." type="password">
+  <div class="sh-btns">
+    <button class="btn-out" onclick="closeSheet('apiSheet')">Cancel</button>
+    <button class="btn-act" style="flex:1" onclick="saveCricApiKey()">Connect 🔗</button>
+  </div>
+</div>
+</div>
+
+<!-- Supabase Sheet -->
+<div class="ovl" id="supaSheet" onclick="ovlClose(event,'supaSheet')">
+<div class="sheet">
+  <div class="sh-hdl"></div>
+  <div class="sh-t">Supabase Setup</div>
+  <div class="sh-s">Real-time multiplayer backend</div>
+  <div style="background:rgba(0,255,135,.05);border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 14px;font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:14px">
+    <strong style="color:var(--txt);display:block;margin-bottom:4px">🗄️ Get your free project:</strong>
+    1. Go to <a href="https://supabase.com" target="_blank" style="color:var(--acc)">supabase.com</a> → New Project (free)<br>
+    2. Settings → API → copy <strong style="color:var(--txt)">URL</strong> and <strong style="color:var(--txt)">anon key</strong><br>
+    3. Run this SQL in the SQL editor:<br>
+    <pre style="margin-top:8px;padding:8px;background:var(--bg2);border-radius:6px;font-size:10px;overflow-x:auto;color:var(--acc);font-family:'JetBrains Mono',monospace">CREATE TABLE leagues (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT, code TEXT UNIQUE,
+  created_by UUID, created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE teams (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID, league_id UUID, match_id TEXT,
+  players JSONB, captain_id INT, vc_id INT,
+  locked BOOLEAN DEFAULT false, points INT DEFAULT 0,
+  user_name TEXT, user_emoji TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE leagues ENABLE ROW LEVEL SECURITY;
+ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "read all" ON leagues FOR SELECT USING (true);
+CREATE POLICY "read all" ON teams FOR SELECT USING (true);
+CREATE POLICY "insert own" ON leagues FOR INSERT WITH CHECK (true);
+CREATE POLICY "insert own" ON teams FOR INSERT WITH CHECK (true);</pre>
+    <strong style="color:var(--gold)">Free tier:</strong> 500MB DB · 50K users · Real-time included ✅
+  </div>
+  <label class="form-label">SUPABASE URL</label>
+  <input class="form-input" id="supaUrl" placeholder="https://xxxx.supabase.co" type="url">
+  <label class="form-label">ANON KEY</label>
+  <input class="form-input" id="supaKey" placeholder="eyJ..." type="password">
+  <div class="sh-btns">
+    <button class="btn-out" onclick="closeSheet('supaSheet')">Cancel</button>
+    <button class="btn-act" style="flex:1" onclick="saveSupabase()">Connect 🗄️</button>
+  </div>
+</div>
+</div>
+
+<!-- How To Sheet -->
+<div class="ovl" id="howSheet" onclick="ovlClose(event,'howSheet')">
+<div class="sheet" style="max-height:85vh;overflow-y:auto">
+  <div class="sh-hdl"></div>
+  <div class="sh-t">Live Data Setup</div>
+  <div class="sh-s">Get KD's XI fully live in 10 minutes</div>
+  <div style="font-size:12px;line-height:1.9;color:var(--muted);display:flex;flex-direction:column;gap:16px">
+    <div>
+      <strong style="color:var(--acc);font-size:14px;display:block;margin-bottom:4px">Step 1 — Supabase (Backend)</strong>
+      Visit <a href="https://supabase.com" target="_blank" style="color:var(--acc)">supabase.com</a>, create a free account and new project. Copy your URL and anon key, paste them in <strong style="color:var(--txt)">Settings → Supabase</strong>. Run the SQL shown there to create the tables. This gives you real multiplayer leagues — friends submit their XI from their own phones and you see their scores live.
+    </div>
+    <div>
+      <strong style="color:var(--acc);font-size:14px;display:block;margin-bottom:4px">Step 2 — CricAPI (Live Scores)</strong>
+      Visit <a href="https://cricketdata.org" target="_blank" style="color:var(--acc)">cricketdata.org</a>, sign up free, copy your API key and paste in <strong style="color:var(--txt)">Settings → CricAPI</strong>. The app will then fetch real IPL matches, live scores, and actual player pool with credits.
+    </div>
+    <div>
+      <strong style="color:var(--acc);font-size:14px;display:block;margin-bottom:4px">Step 3 — Share with Friends</strong>
+      Once both are set up, create a league, share the invite code. Friends open this same HTML file on their phones, enter the same Supabase credentials (you can host it on GitHub Pages free), join your league code, and submit their XI!
+    </div>
+    <div>
+      <strong style="color:var(--acc);font-size:14px;display:block;margin-bottom:4px">Step 4 — Host for Free (Optional)</strong>
+      Drop this HTML file on <a href="https://pages.github.com" target="_blank" style="color:var(--acc)">GitHub Pages</a> or <a href="https://netlify.com" target="_blank" style="color:var(--acc)">Netlify</a> (both free). Share the URL — everyone in your group opens it like a website. It installs as a PWA from their phone.
+    </div>
+  </div>
+  <button class="btn-act" style="margin-top:20px" onclick="closeSheet('howSheet')">Got It! 🏏</button>
+</div>
+</div>
+
+<!-- Notification Sheet -->
+<div class="ovl" id="notifSheet" onclick="ovlClose(event,'notifSheet')">
+<div class="sheet">
+  <div class="sh-hdl"></div>
+  <div class="sh-t">Notifications</div>
+  <div class="sh-s">Stay updated on your leagues</div>
+  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 15px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bdr2)">
+      <div><div style="font-weight:700;font-size:13px">Match Reminders</div><div style="font-size:11px;color:var(--muted)">30 min before team lock deadline</div></div>
+      <div class="toggle on" onclick="toggleEl(this)"><div class="tknob"></div></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 15px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bdr2)">
+      <div><div style="font-weight:700;font-size:13px">Rank Changes</div><div style="font-size:11px;color:var(--muted)">When someone overtakes you</div></div>
+      <div class="toggle on" onclick="toggleEl(this)"><div class="tknob"></div></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 15px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bdr2)">
+      <div><div style="font-weight:700;font-size:13px">League Activity</div><div style="font-size:11px;color:var(--muted)">Friends submit teams</div></div>
+      <div class="toggle" onclick="toggleEl(this)"><div class="tknob"></div></div>
+    </div>
+  </div>
+  <button class="btn-act" onclick="closeSheet('notifSheet');toast('✅ Preferences saved!')">Save</button>
+</div>
+</div>
+
+<style>
+.toggle{width:44px;height:24px;background:var(--sur3);border-radius:12px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--acc)}
+.tknob{position:absolute;top:3px;left:3px;width:18px;height:18px;background:var(--muted);border-radius:50%;transition:all .2s}
+.toggle.on .tknob{left:23px;background:#000}
+</style>
+
+<!-- TOAST -->
+<div class="toast" id="toastEl"></div>
+
+<script>
+// ================================================================
+// CONFIG — paste your keys here OR enter them in Settings
+// ================================================================
+const CFG = {
+  supabaseUrl:  localStorage.getItem('kdxi_supa_url') || '',
+  supabaseKey:  localStorage.getItem('kdxi_supa_key') || '',
+  cricApiKey:   localStorage.getItem('kdxi_cric_key') || '',
+};
+
+// ================================================================
+// SUPABASE CLIENT
+// ================================================================
+let sb = null;
+function initSupabase() {
+  if (CFG.supabaseUrl && CFG.supabaseKey && window.supabase) {
+    sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
+    document.getElementById('supaDot').className = 'api-dot live';
+    document.getElementById('supaStatus').textContent = 'Live';
+    document.getElementById('supaStatus').style.color = 'var(--acc)';
+    return true;
+  }
+  return false;
+}
+
+// ================================================================
+// PLAYER DATA (demo — replaced by CricAPI when key is set)
+// ================================================================
+const DEMO_PLAYERS = [
+  {id:1,name:'MS Dhoni',em:'🐐',team:'CSK',role:'WK',credits:9.5,pts:312,avg:48,form:['w','w','w','l','w']},
+  {id:2,name:'KL Rahul',em:'🦁',team:'LSG',role:'WK',credits:9,pts:287,avg:42,form:['w','l','w','w','l']},
+  {id:3,name:'Ishan Kishan',em:'⚡',team:'MI',role:'WK',credits:8,pts:241,avg:38,form:['l','w','w','l','w']},
+  {id:4,name:'Virat Kohli',em:'👑',team:'RCB',role:'BAT',credits:11,pts:498,avg:72,form:['w','w','w','w','w']},
+  {id:5,name:'Rohit Sharma',em:'🎯',team:'MI',role:'BAT',credits:10.5,pts:421,avg:64,form:['w','w','l','w','w']},
+  {id:6,name:'Shubman Gill',em:'🌟',team:'GT',role:'BAT',credits:9.5,pts:388,avg:58,form:['w','l','w','w','l']},
+  {id:7,name:'Ruturaj Gaikwad',em:'🔥',team:'CSK',role:'BAT',credits:9,pts:356,avg:54,form:['w','w','w','l','w']},
+  {id:8,name:'Devdutt Padikkal',em:'🏹',team:'RR',role:'BAT',credits:7.5,pts:278,avg:40,form:['l','w','l','w','w']},
+  {id:9,name:'Sai Sudharsan',em:'🌈',team:'GT',role:'BAT',credits:7,pts:243,avg:36,form:['w','w','l','l','w']},
+  {id:10,name:'Hardik Pandya',em:'💪',team:'MI',role:'AR',credits:10,pts:445,avg:66,form:['w','w','w','w','l']},
+  {id:11,name:'Ravindra Jadeja',em:'🐍',team:'CSK',role:'AR',credits:9.5,pts:412,avg:61,form:['w','l','w','w','w']},
+  {id:12,name:'Axar Patel',em:'🎭',team:'DC',role:'AR',credits:8.5,pts:334,avg:50,form:['l','w','w','l','w']},
+  {id:13,name:'Jasprit Bumrah',em:'🚀',team:'MI',role:'BOWL',credits:10.5,pts:468,avg:69,form:['w','w','w','w','w']},
+  {id:14,name:'Yuzvendra Chahal',em:'🕷️',team:'RR',role:'BOWL',credits:9,pts:391,avg:57,form:['w','l','w','w','l']},
+  {id:15,name:'Mohammed Siraj',em:'🌪️',team:'RCB',role:'BOWL',credits:9,pts:367,avg:54,form:['w','w','l','w','w']},
+  {id:16,name:'Rashid Khan',em:'🌀',team:'GT',role:'BOWL',credits:9.5,pts:402,avg:60,form:['w','w','w','l','w']},
+  {id:17,name:'T Natarajan',em:'💫',team:'SRH',role:'BOWL',credits:7.5,pts:289,avg:42,form:['l','w','w','l','w']},
+  {id:18,name:'Kuldeep Yadav',em:'🎪',team:'DC',role:'BOWL',credits:8.5,pts:348,avg:52,form:['w','w','l','w','l']},
+];
+
+const DEMO_MATCHES = [
+  {id:'m1',t1:'MI',t2:'CSK',f1:'🔵',f2:'🟡',status:'live',over:'14.3',sc1:'156/4',sc2:'Bat 2nd',venue:'Wankhede',label:'Match 22'},
+  {id:'m2',t1:'RCB',t2:'KKR',f1:'🔴',f2:'🟣',status:'soon',when:'Tomorrow 7:30 PM',sc1:'—',sc2:'—',venue:'Chinnaswamy',label:'Match 23'},
+  {id:'m3',t1:'RR',t2:'DC',f1:'🟤',f2:'🩵',status:'soon',when:'May 12 3:30 PM',sc1:'—',sc2:'—',venue:'Sawai Mansingh',label:'Match 24'},
+  {id:'m4',t1:'SRH',t2:'GT',f1:'🟠',f2:'🟢',status:'soon',when:'May 14 7:30 PM',sc1:'—',sc2:'—',venue:'Rajiv Gandhi',label:'Match 25'},
+];
+
+// Demo leagues (replaced by Supabase when connected)
+let DEMO_LEAGUES = [
+  {id:'lg1',name:'Legends XI',code:'LGND2025',icon:'🏆',members:8},
+  {id:'lg2',name:'Squad Goals',code:'SQ2025',icon:'⚡',members:3},
+  {id:'lg3',name:'Office League',code:'OFFC25',icon:'🔥',members:4},
+];
+
+const DEMO_TEAMS = {
+  lg1:[
+    {name:'Rohan S.',team:"Six Machines",em:'🦊',pts:3210,isMe:false},
+    {name:'',team:"KD's Army",em:'🦁',pts:2840,isMe:true},
+    {name:'Priya M.',team:'Bumrah Ballers',em:'🐯',pts:2780,isMe:false},
+    {name:'Arjun T.',team:'Jadeja XI',em:'🦅',pts:2650,isMe:false},
+    {name:'Sneha R.',team:'Dhoni Forever',em:'🐺',pts:2520,isMe:false},
+    {name:'Karan P.',team:'RCB Faithful',em:'🐉',pts:2340,isMe:false},
+    {name:'Aarav M.',team:'MI Loyalists',em:'🦄',pts:2180,isMe:false},
+    {name:'Divya S.',team:'RR Warriors',em:'🦋',pts:1990,isMe:false},
+  ],
+  lg2:[
+    {name:'',team:"KD's Army",em:'🦁',pts:2840,isMe:true},
+    {name:'Rohan S.',team:'Six Machines',em:'🦊',pts:3210,isMe:false},
+    {name:'Priya M.',team:'Bumrah Ballers',em:'🐯',pts:2780,isMe:false},
+  ],
+  lg3:[
+    {name:'Arjun T.',team:'Jadeja XI',em:'🦅',pts:2650,isMe:false},
+    {name:'',team:"KD's Army",em:'🦁',pts:2840,isMe:true},
+    {name:'Sneha R.',team:'Dhoni Forever',em:'🐺',pts:2520,isMe:false},
+    {name:'Karan P.',team:'RCB Faithful',em:'🐉',pts:2340,isMe:false},
+  ],
+};
+
+// ================================================================
+// STATE
+// ================================================================
+const S = {
+  user: null, email: '', emoji: '🦁', isGuest: false,
+  selected: new Set(), credits: 100,
+  capId: null, vcId: null,
+  capTaps: {},
+  role: 'ALL',
+  currentLeagueId: null,
+  currentMatch: 'XI',
+  teamLocked: false,
+  playerData: DEMO_PLAYERS,
+  matchData: DEMO_MATCHES,
+  myLeagues: DEMO_LEAGUES,
+  myPts: 2840,
+  deferredInstall: null,
+};
+
+function saveLocal() {
+  const d = {
+    user:S.user,email:S.email,emoji:S.emoji,isGuest:S.isGuest,
+    selected:[...S.selected],credits:S.credits,
+    capId:S.capId,vcId:S.vcId,teamLocked:S.teamLocked,myPts:S.myPts
+  };
+  try{localStorage.setItem('kdxi_s',JSON.stringify(d))}catch(e){}
+}
+function loadLocal() {
+  try {
+    const d = JSON.parse(localStorage.getItem('kdxi_s')||'{}');
+    if(d.user){
+      Object.assign(S,d);
+      S.selected = new Set(d.selected||[]);
+      return true;
+    }
+  } catch(e){}
+  return false;
+}
+
+// ================================================================
+// AUTH
+// ================================================================
+let authMode = 'login';
+function switchAuthTab(mode) {
+  authMode = mode;
+  document.querySelectorAll('.auth-tab').forEach((b,i)=>{
+    b.classList.toggle('on', (mode==='login'&&i===0)||(mode==='signup'&&i===1));
+  });
+  document.getElementById('signupFields').style.display = mode==='signup'?'block':'none';
+  document.getElementById('authBtn').textContent = mode==='login' ? '🏏 Sign In' : '🏏 Create Account';
+}
+let pickedEmo = '🦁';
+function pickEmo(btn, emo) {
+  document.querySelectorAll('.emo').forEach(b=>b.classList.remove('picked'));
+  btn.classList.add('picked');
+  pickedEmo = emo;
+}
+
+async function doAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const pass  = document.getElementById('authPass').value.trim();
+  const name  = document.getElementById('authName')?.value.trim();
+  if(!email||!pass){toast('Fill in email & password',true);return;}
+  if(pass.length<8){toast('Password needs 8+ characters',true);return;}
+
+  const btn = document.getElementById('authBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+
+  if(sb) {
+    try {
+      let res;
+      if(authMode==='signup') {
+        if(!name){toast('Enter your name!',true);btn.disabled=false;btn.textContent='🏏 Create Account';return;}
+        res = await sb.auth.signUp({email,password:pass,options:{data:{name,emoji:pickedEmo}}});
+      } else {
+        res = await sb.auth.signInWithPassword({email,password:pass});
+      }
+      if(res.error){toast(res.error.message,true);btn.disabled=false;btn.textContent='🏏 '+(authMode==='login'?'Sign In':'Create Account');return;}
+      const u = res.data.user;
+      S.user = u.user_metadata?.name || email.split('@')[0];
+      S.email = email;
+      S.emoji = u.user_metadata?.emoji || pickedEmo;
+      S.isGuest = false;
+      boot();
+    } catch(e){toast('Auth error: '+e.message,true);btn.disabled=false;btn.textContent='🏏 Sign In';}
+  } else {
+    // Demo mode - just accept any credentials
+    S.user = name || email.split('@')[0] || 'Player';
+    S.email = email;
+    S.emoji = pickedEmo;
+    S.isGuest = false;
+    boot();
+  }
+}
+
+function doGuest() {
+  S.user = 'Guest';
+  S.email = '';
+  S.emoji = '🏏';
+  S.isGuest = true;
+  boot();
+}
+
+function doLogout() {
+  if(sb) sb.auth.signOut();
+  try{localStorage.removeItem('kdxi_s')}catch(e){}
+  S.user=null; S.selected=new Set(); S.credits=100; S.capId=null; S.vcId=null;
+  document.getElementById('authScreen').classList.add('on');
+  document.getElementById('mainScreen').classList.remove('on');
+}
+
+function boot() {
+  saveLocal();
+  document.getElementById('authScreen').classList.remove('on');
+  document.getElementById('mainScreen').classList.add('on');
+  updateHeader();
+  updateProfile();
+  renderMatches();
+  renderPlayerGrid();
+  fetchLeagues();
+  renderStats();
+  startTicker();
+  fetchLiveScores();
+
+  // update demo team name
+  DEMO_TEAMS.lg1.find(t=>t.isMe).name = S.user;
+  DEMO_TEAMS.lg2.find(t=>t.isMe).name = S.user;
+  DEMO_TEAMS.lg3.find(t=>t.isMe).name = S.user;
+
+  if(CFG.supabaseUrl) initSupabase();
+  if(CFG.cricApiKey) {
+    document.getElementById('apiDot').className='api-dot live';
+    document.getElementById('apiStatus').textContent='Live';
+    document.getElementById('apiStatus').style.color='var(--acc)';
+  }
+}
+
+// ================================================================
+// NAVIGATION
+// ================================================================
+function nav(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  document.getElementById('pg-'+id).classList.add('on');
+  const map={home:0,team:1,leaderboard:2,leagues:3,stats:4};
+  const navItems=document.querySelectorAll('.ni');
+  if(map[id]!==undefined && navItems[map[id]]) navItems[map[id]].classList.add('on');
+  if(id==='leaderboard') {
+    if(S.currentLeagueId) renderLeaderboard(S.currentLeagueId);
+    else renderLeaguePills();
+  }
+  if(id==='leagues') fetchLeagues();
+  if(id==='stats') renderStats();
+  if(id==='team') renderPlayerGrid();
+}
+
+function updateHeader() {
+  document.getElementById('hdrEm').textContent = S.emoji;
+  document.getElementById('hdrPts').textContent = S.myPts.toLocaleString();
+}
+
+function updateProfile() {
+  document.getElementById('profEm').textContent = S.emoji;
+  document.getElementById('profName').textContent = S.user;
+  document.getElementById('profHandle').textContent = '@'+S.user.split(' ')[0].toLowerCase()+' · KD\'s XI';
+  document.getElementById('pp-pts').textContent = S.myPts.toLocaleString();
+  document.getElementById('pp-rk').textContent = '#3';
+  document.getElementById('pp-m').textContent = '7';
+}
+
+// ================================================================
+// MATCHES
+// ================================================================
+function renderMatches() {
+  const ml = document.getElementById('matchList');
+  ml.innerHTML = S.matchData.map(m => `
+    <div class="mc" onclick="goTeam('${m.t1} vs ${m.t2}')">
+      <div class="mc-banner">
+        <div class="mc-status ${m.status==='live'?'live':'soon'}">${m.status==='live'?'LIVE · '+m.over+' OV':m.when}</div>
+        <div class="teams">
+          <div class="team"><div class="t-em">${m.f1}</div><div class="t-n">${m.t1}</div><div class="t-sc">${m.sc1}</div></div>
+          <div class="vs">VS</div>
+          <div class="team"><div class="t-em">${m.f2}</div><div class="t-n">${m.t2}</div><div class="t-sc">${m.sc2}</div></div>
+        </div>
+      </div>
+      <div class="mc-foot">
+        <div class="mc-meta">📍 ${m.venue} · T20 · ${m.label}</div>
+        <button class="mc-btn" onclick="event.stopPropagation();goTeam('${m.t1} vs ${m.t2}')">${m.status==='live'?'Edit XI':'Pick XI'}</button>
+      </div>
+    </div>`).join('');
+}
+
+function goTeam(match) {
+  S.currentMatch = match;
+  document.getElementById('matchLbl').textContent = match;
+  nav('team');
+}
+
+// ================================================================
+// LIVE SCORE FETCH (CricAPI)
+// ================================================================
+async function fetchLiveScores() {
+  if(!CFG.cricApiKey) { startTicker(); return; }
+  try {
+    const r = await fetch(`https://api.cricapi.com/v1/currentMatches?apikey=${CFG.cricApiKey}&offset=0`);
+    const d = await r.json();
+    if(d.status==='success' && d.data?.length) {
+      S.matchData = d.data.slice(0,4).map((m,i)=>({
+        id:'m'+i,
+        t1:m.teams[0]||'TBA',t2:m.teams[1]||'TBA',
+        f1:'🏏',f2:'🏏',
+        status:m.matchStarted&&!m.matchEnded?'live':'soon',
+        over:m.score?.[0]?.overs||'—',
+        sc1:m.score?.[0]?`${m.score[0].r}/${m.score[0].w} (${m.score[0].overs})`:'—',
+        sc2:m.score?.[1]?`${m.score[1].r}/${m.score[1].w} (${m.score[1].overs})`:'—',
+        venue:m.venue||'TBA',
+        when:m.dateTimeGMT?new Date(m.dateTimeGMT).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'TBA',
+        label:'Match'
+      }));
+      renderMatches();
+      // Update ticker with live match
+      const live = S.matchData.find(m=>m.status==='live');
+      if(live) document.getElementById('tickerEl').innerHTML = `<strong>${live.t1}</strong> ${live.sc1} vs ${live.t2} ${live.sc2}`;
+    }
+  } catch(e){ startTicker(); }
+  // Refresh every 60s
+  setTimeout(fetchLiveScores, 60000);
+}
+
+// ================================================================
+// LIVE TICKER (demo when no API key)
+// ================================================================
+const tickerMsgs = [
+  '<strong>Bumrah</strong> to Dhoni · FOUR! · MI 156/4 (14.3)',
+  '<strong>Jadeja</strong> bowls a tight over · CSK 162/4 (15.6)',
+  '<strong>Hardik</strong> to Gaikwad · WICKET! · LBW · 162/5 (16.1)',
+  '<strong>Bumrah</strong> · Maiden over! · 162/5 (17.0)',
+  '<strong>Dhoni</strong> finishes with a SIX! · CSK 183/5 (20.0)',
+  'CSK need 175 to win · Target set by MI',
+];
+let tickI=0;
+function startTicker() {
+  if(CFG.cricApiKey) return;
+  document.getElementById('tickerEl').innerHTML = tickerMsgs[0];
+  setInterval(()=>{ tickI=(tickI+1)%tickerMsgs.length; document.getElementById('tickerEl').innerHTML=tickerMsgs[tickI]; },4500);
+}
+
+// ================================================================
+// PLAYER GRID
+// ================================================================
+const ROLE_CLS={WK:'r-wk',BAT:'r-bat',AR:'r-ar',BOWL:'r-bo'};
+const ROLE_LBL={WK:'WK',BAT:'BAT',AR:'A/R',BOWL:'BOWL'};
+const ROLE_MAX={WK:4,BAT:6,AR:4,BOWL:6};
+
+function renderPlayerGrid() {
+  if(document.getElementById('pitchWrap').style.display!=='none') return;
+  const filtered = S.role==='ALL' ? S.playerData : S.playerData.filter(p=>p.role===S.role);
+  const counts = getRoleCounts();
+  document.getElementById('playerGrid').innerHTML = filtered.map(p=>{
+    const sel = S.selected.has(p.id);
+    const canAdd = sel || (S.selected.size<11 && S.credits>=p.credits && (counts[p.role]||0)<ROLE_MAX[p.role]);
+    return `<div class="pc${sel?' sel':''}${!canAdd&&!sel?' dim':''}" onclick="${canAdd||sel?`pick(${p.id})`:'toast(\"Role or credit limit reached!\",true)'}">
+      <div class="pav">${p.em}</div>
+      <div class="pin">
+        <div class="pn">${p.name}</div>
+        <div class="pm"><span class="pt">${p.team}</span><span class="rb ${ROLE_CLS[p.role]}">${ROLE_LBL[p.role]}</span></div>
+        <div class="pch">
+          <span class="ch">⭐${p.pts}pts</span>
+          <span class="ch">Avg ${p.avg}</span>
+          ${p.pts>400?'<span class="ch hot">🔥 HOT</span>':''}
+          ${p.form.filter(f=>f==='w').length>=4?'<span class="ch hot">📈 Form</span>':''}
+        </div>
+      </div>
+      <div class="pcr"><div class="pcv">${p.credits}</div><div class="pcl">credits</div></div>
+    </div>`;
+  }).join('');
+  updateBudgetUI();
+}
+
+function pick(id) {
+  const p = S.playerData.find(x=>x.id===id);
+  if(S.selected.has(id)) {
+    S.selected.delete(id);
+    S.credits += p.credits;
+    if(S.capId===id) S.capId=null;
+    if(S.vcId===id) S.vcId=null;
+  } else {
+    if(S.selected.size>=11){toast('Max 11 players!',true);return;}
+    if(S.credits<p.credits){toast('Not enough credits!',true);return;}
+    const c=getRoleCounts();
+    if((c[p.role]||0)>=ROLE_MAX[p.role]){toast(`Max ${ROLE_MAX[p.role]} ${p.role} players!`,true);return;}
+    S.selected.add(id);
+    S.credits -= p.credits;
+  }
+  S.credits = Math.round(S.credits*10)/10;
+  saveLocal();
+  renderPlayerGrid();
+  const cta = document.getElementById('pitchCTA');
+  if(cta) cta.style.display = S.selected.size===11 ? 'block' : 'none';
+  if(S.selected.size===11) setTimeout(()=>toast('XI complete! Tap VIEW XI ON PITCH'),400);
+}
+
+function getRoleCounts() {
+  const c={};
+  S.selected.forEach(id=>{const p=S.playerData.find(x=>x.id===id);if(p)c[p.role]=(c[p.role]||0)+1;});
+  return c;
+}
+
+function updateBudgetUI() {
+  const pct=(S.credits/100)*100;
+  const el=document.getElementById('credEl');
+  el.textContent=S.credits.toFixed(1);
+  el.className='bud-v '+(S.credits>30?'g':S.credits>10?'y':'r');
+  document.getElementById('budFill').style.width=pct+'%';
+  document.getElementById('teamSub').textContent=S.selected.size+' / 11 · '+S.currentMatch;
+  document.getElementById('selEl').textContent=S.selected.size+'/11';
+  const cta=document.getElementById('pitchCTA');
+  if(cta) cta.style.display=S.selected.size===11?'block':'none';
+}
+
+function filterRole(role, btn) {
+  S.role=role;
+  document.querySelectorAll('#roleFilters .pill').forEach(p=>p.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  renderPlayerGrid();
+}
+
+// ================================================================
+// PITCH VIEW
+// ================================================================
+function showPitch() {
+  document.getElementById('playerGrid').style.display='none';
+  document.getElementById('roleFilters').style.display='none';
+  document.getElementById('pitchCTA').style.display='none';
+  document.getElementById('pitchWrap').style.display='block';
+  buildPitch();
+}
+function backToSelect() {
+  document.getElementById('pitchWrap').style.display='none';
+  document.getElementById('playerGrid').style.display='flex';
+  document.getElementById('roleFilters').style.display='flex';
+  if(S.selected.size===11) document.getElementById('pitchCTA').style.display='block';
+}
+function buildPitch() {
+  const sel=S.playerData.filter(p=>S.selected.has(p.id));
+  const rows=[
+    sel.filter(p=>p.role==='BOWL'),
+    sel.filter(p=>p.role==='AR'),
+    sel.filter(p=>p.role==='BAT'),
+    sel.filter(p=>p.role==='WK'),
+  ];
+  const field=document.getElementById('pitchField');
+  field.querySelectorAll('.pr').forEach(r=>r.remove());
+  rows.forEach(row=>{
+    if(!row.length)return;
+    const rowEl=document.createElement('div');
+    rowEl.className='pr';
+    row.forEach(p=>{
+      const isCap=S.capId===p.id, isVC=S.vcId===p.id;
+      rowEl.innerHTML+=`<div class="pp" onclick="cycleCap(${p.id})">
+        <div class="pp-av${isCap?' cap':isVC?' vc':''}">${p.em}</div>
+        <div class="pp-n">${p.name.split(' ')[0]}</div>
+        <div class="pp-p">${p.pts}pts</div>
+      </div>`;
+    });
+    field.insertBefore(rowEl, field.querySelector('.pzl.b'));
+  });
+}
+function cycleCap(id) {
+  S.capTaps[id]=(S.capTaps[id]||0)+1;
+  const t=S.capTaps[id]%3;
+  if(t===1){S.capId=id;if(S.vcId===id)S.vcId=null;toast('⭐ Captain set! 2× points');}
+  else if(t===2){if(S.capId===id)S.capId=null;S.vcId=id;toast('🎯 VC set! 1.5× points');}
+  else{if(S.capId===id)S.capId=null;if(S.vcId===id)S.vcId=null;}
+  buildPitch();
+}
+async function lockTeam() {
+  if(!S.capId){toast('Set Captain first!',true);return;}
+  if(!S.vcId){toast('Set Vice-Captain!',true);return;}
+  S.teamLocked=true;
+  // Save to Supabase if connected
+  if(sb) {
+    try {
+      await sb.from('teams').upsert({
+        user_name:S.user,user_emoji:S.emoji,
+        match_id:S.currentMatch,
+        players:[...S.selected],captain_id:S.capId,vc_id:S.vcId,
+        locked:true,points:0
+      });
+      toast('🔒 Team saved to cloud! Good luck 🏏');
+    } catch(e){toast('🔒 Team locked locally! (Connect Supabase to sync)');}
+  } else {
+    toast('🔒 Team locked! Connect Supabase to sync with friends');
+  }
+  saveLocal();
+  setTimeout(()=>nav('leaderboard'),1200);
+}
+
+// ================================================================
+// LEAGUES
+// ================================================================
+async function fetchLeagues() {
+  if(sb && !S.isGuest) {
+    try {
+      const { data } = await sb.from('leagues').select('*').order('created_at',{ascending:false});
+      if(data?.length) {
+        S.myLeagues = data;
+        renderLeagueList(data);
+        document.getElementById('leagueSub').textContent = data.length+' active';
+        renderLeaguePills(data);
+        return;
+      }
+    } catch(e){}
+  }
+  // Demo fallback
+  renderLeagueList(S.myLeagues);
+  document.getElementById('leagueSub').textContent = S.myLeagues.length+' active';
+  renderLeaguePills(S.myLeagues);
+}
+
+function renderLeagueList(leagues) {
+  document.getElementById('leagueList').innerHTML = leagues.length ? leagues.map(l=>{
+    const teams = DEMO_TEAMS[l.id] || DEMO_TEAMS.lg1;
+    const myTeam = teams.find(t=>t.isMe);
+    const sorted = [...teams].sort((a,b)=>b.pts-a.pts);
+    const myRank = sorted.findIndex(t=>t.isMe)+1;
+    const emojis = teams.slice(0,5).map(t=>`<span class="mv">${t.em}</span>`).join('');
+    return `<div class="lc">
+      <div class="lc-h"><div class="lc-ico">${l.icon||'🏆'}</div><div><div class="lc-n">${l.name}</div><div class="lc-c">Code: ${l.code}</div></div></div>
+      <div class="lc-b">
+        <div style="display:flex">${emojis}</div>
+        <span class="mc2">${teams.length} members</span>
+        <div class="lc-rk">
+          <div class="lc-rv" style="${myRank===1?'color:var(--gold)':''}">#${myRank}</div>
+          <div class="lc-rl${myRank===1?' lead':''}">${myRank===1?'LEADING 🔥':'YOUR RANK'}</div>
+        </div>
+      </div>
+      <div class="lc-f">
+        <button class="btn-out" onclick="copyCode('${l.code}')">📋 Share Code</button>
+        <button class="btn-out" onclick="viewLeague('${l.id}')">View Ranks →</button>
+      </div>
+    </div>`;
+  }).join('') : '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px">No leagues yet.<br>Create one and invite your friends!</div>';
+}
+
+function renderLeaguePills(leagues) {
+  const l = leagues || S.myLeagues;
+  document.getElementById('lgPills').innerHTML = l.map((lg,i)=>`
+    <button class="pill${i===0?' on':''}" onclick="switchLg('${lg.id}',this)">${lg.icon||'🏆'} ${lg.name}</button>`).join('');
+  if(l.length) {
+    S.currentLeagueId = l[0].id;
+    renderLeaderboard(l[0].id);
+    document.getElementById('lbSub').textContent = l[0].name+' · Live';
+  }
+}
+
+function viewLeague(id) {
+  S.currentLeagueId = id;
+  nav('leaderboard');
+}
+
+function switchLg(id, btn) {
+  S.currentLeagueId=id;
+  document.querySelectorAll('#lgPills .pill').forEach(p=>p.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  const lg=S.myLeagues.find(l=>l.id===id);
+  if(lg) document.getElementById('lbSub').textContent=lg.name+' · Live';
+  renderLeaderboard(id);
+}
+
+async function renderLeaderboard(leagueId) {
+  let teams = [];
+  if(sb && !S.isGuest) {
+    try {
+      const { data } = await sb.from('teams').select('*').eq('league_id',leagueId);
+      if(data?.length) teams = data.map(t=>({name:t.user_name,em:t.user_emoji,team:'My XI',pts:t.points,isMe:t.user_name===S.user}));
+    } catch(e){}
+  }
+  if(!teams.length) teams = DEMO_TEAMS[leagueId] || DEMO_TEAMS.lg1;
+  const sorted = [...teams].sort((a,b)=>b.pts-a.pts);
+
+  // Podium
+  const top=sorted.slice(0,Math.min(3,sorted.length));
+  const ord=top.length>=3?[top[1],top[0],top[2]]:top;
+  const cls=['p2','p1','p3'], nums=[2,1,3];
+  let html=`<div class="podium">`;
+  ord.forEach((p,i)=>{
+    html+=`<div class="pod">
+      <div class="pod-av">${p.em}</div>
+      <div class="pod-n">${p.name}${p.isMe?' (You)':''}</div>
+      <div class="pod-p">${p.pts.toLocaleString()} pts</div>
+      <div class="pod-blk ${cls[i]}">${nums[i]}</div>
+    </div>`;
+  });
+  html+='</div>';
+
+  sorted.forEach((p,i)=>{
+    const r=i+1,nc=r===1?'g':r===2?'s':r===3?'b':'';
+    html+=`<div class="rr${p.isMe?' me':''}">
+      <div class="rk ${nc}">${r}</div>
+      <div class="rav">${p.em}</div>
+      <div class="ri">
+        <div class="rn">${p.name} ${p.isMe?'<span class="me-tag">YOU</span>':''}</div>
+        <div class="rte">${p.team}</div>
+      </div>
+      <div class="rp"><div class="rp-v">${p.pts.toLocaleString()}</div><div class="rp-l">POINTS</div></div>
+    </div>`;
+  });
+  document.getElementById('lbBody').innerHTML = html;
+}
+
+// Real-time leaderboard via Supabase
+function subscribeLeaderboard() {
+  if(!sb) return;
+  sb.channel('teams-changes').on('postgres_changes',{event:'*',schema:'public',table:'teams'},()=>{
+    if(S.currentLeagueId) renderLeaderboard(S.currentLeagueId);
+  }).subscribe();
+}
+
+async function createOrJoinLeague() {
+  const name = document.getElementById('lgName').value.trim();
+  const code = document.getElementById('lgCode').value.trim().toUpperCase();
+  if(!name && !code){toast('Enter a name or invite code!',true);return;}
+  closeSheet('leagueSheet');
+
+  if(sb && !S.isGuest) {
+    try {
+      if(code) {
+        const { data } = await sb.from('leagues').select('*').eq('code',code).single();
+        if(data){ toast('🎉 Joined: '+data.name); fetchLeagues(); }
+        else toast('Invalid code!',true);
+      } else {
+        const newCode = name.substring(0,4).toUpperCase()+Math.floor(1000+Math.random()*9000);
+        await sb.from('leagues').insert({name,code:newCode,icon:'🏆'});
+        toast(`🏆 "${name}" created! Code: ${newCode}`);
+        fetchLeagues();
+      }
+    } catch(e){toast('Error: '+e.message,true);}
+  } else {
+    if(code){
+      toast('🎉 Joined league! (Demo mode)');
+    } else {
+      const newCode=name.substring(0,4).toUpperCase()+Math.floor(1000+Math.random()*9000);
+      toast(`🏆 "${name}" created! Code: ${newCode} (Demo)`);
+      S.myLeagues.push({id:'lg'+Date.now(),name,code:newCode,icon:'🏆',members:1});
+      renderLeagueList(S.myLeagues);
+    }
+  }
+  document.getElementById('lgName').value='';
+  document.getElementById('lgCode').value='';
+}
+
+// ================================================================
+// SCORING ENGINE
+// ================================================================
+function calcPoints(innings) {
+  // innings = {runs, fours, sixes, wickets, maidens, catches, runOutDirect, runOutAssist, duck}
+  let pts = 0;
+  pts += (innings.runs||0) * 1;
+  pts += (innings.fours||0) * 1;  // bonus
+  pts += (innings.sixes||0) * 2;  // bonus
+  if((innings.runs||0)>=50) pts+=8;
+  if((innings.runs||0)>=100) pts+=16;
+  pts += (innings.wickets||0) * 25;
+  if((innings.wickets||0)>=3) pts+=4;
+  if((innings.wickets||0)>=5) pts+=8;
+  pts += (innings.maidens||0) * 8;
+  pts += (innings.catches||0) * 8;
+  pts += (innings.runOutDirect||0) * 12;
+  pts += (innings.runOutAssist||0) * 6;
+  if(innings.duck) pts-=2;
+  if(innings.noBalls) pts-=(innings.noBalls*2);
+  return pts;
+}
+
+// ================================================================
+// STATS
+// ================================================================
+function renderStats() {
+  document.getElementById('st-pts').textContent = S.myPts.toLocaleString();
+  document.getElementById('st-rank').textContent = '#3';
+  document.getElementById('st-m').textContent = '7';
+  document.getElementById('st-hi').textContent = '420';
+  document.getElementById('st-wr').textContent = '68%';
+  document.getElementById('st-pp').textContent = '12';
+  document.getElementById('pp-pts').textContent = S.myPts.toLocaleString();
+
+  const sorted=[...S.playerData].sort((a,b)=>b.pts-a.pts).slice(0,6);
+  document.getElementById('tpList').innerHTML=sorted.map((p,i)=>{
+    const dots=p.form.map(f=>`<div class="fd ${f}"></div>`).join('');
+    return `<div class="tp-r">
+      <div class="tpr-k">${i+1}</div>
+      <div class="tpr-e">${p.em}</div>
+      <div class="tpr-i">
+        <div class="tpr-n">${p.name}</div>
+        <div class="tpr-s">${p.team} · ${p.role}</div>
+        <div class="form-dots">${dots}</div>
+      </div>
+      <div class="tpr-p">${p.pts}pts</div>
+    </div>`;
+  }).join('');
+}
+
+// ================================================================
+// SETTINGS — API KEYS
+// ================================================================
+function saveCricApiKey() {
+  const key = document.getElementById('apiKeyIn').value.trim();
+  if(!key){toast('Paste your CricAPI key!',true);return;}
+  CFG.cricApiKey = key;
+  localStorage.setItem('kdxi_cric_key',key);
+  document.getElementById('apiDot').className='api-dot live';
+  document.getElementById('apiStatus').textContent='Live';
+  document.getElementById('apiStatus').style.color='var(--acc)';
+  closeSheet('apiSheet');
+  toast('🔗 CricAPI connected! Fetching live data...');
+  fetchLiveScores();
+}
+
+function saveSupabase() {
+  const url = document.getElementById('supaUrl').value.trim();
+  const key = document.getElementById('supaKey').value.trim();
+  if(!url||!key){toast('Enter both URL and key!',true);return;}
+  CFG.supabaseUrl=url; CFG.supabaseKey=key;
+  localStorage.setItem('kdxi_supa_url',url);
+  localStorage.setItem('kdxi_supa_key',key);
+  const ok = initSupabase();
+  closeSheet('supaSheet');
+  if(ok){
+    toast('🗄️ Supabase connected! Real-time leagues live!');
+    subscribeLeaderboard();
+    fetchLeagues();
+  } else toast('Connection failed — check your credentials',true);
+}
+
+// ================================================================
+// SHARE / COPY
+// ================================================================
+function copyCode(code) {
+  copy(code);
+  toast('📋 Code copied: '+code);
+}
+function shareApp() {
+  const d={title:"KD's XI — Cricket Fantasy",text:'Join my cricket fantasy league on KD\'s XI!',url:window.location.href};
+  if(navigator.share) navigator.share(d).catch(()=>{});
+  else { copy(window.location.href); toast('📋 App link copied!'); }
+}
+function copy(text) {
+  try{navigator.clipboard.writeText(text)}catch(e){
+    const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  }
+}
+
+// ================================================================
+// NOTIFICATIONS
+// ================================================================
+function showNotifs() {
+  toast('🔔 You rank #3 in Legends XI · Match locks in 2 hrs');
+}
+function toggleEl(el) {
+  el.classList.toggle('on');
+}
+
+// ================================================================
+// PWA
+// ================================================================
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault(); S.deferredInstall=e;
+});
+function triggerInstall() {
+  if(S.deferredInstall){
+    S.deferredInstall.prompt();
+    S.deferredInstall.userChoice.then(r=>{
+      if(r.outcome==='accepted') toast('🎉 KD\'s XI installed!');
+      S.deferredInstall=null;
+    });
+  } else toast('Open in Chrome/Safari → Share → Add to Home Screen');
+}
+
+// ================================================================
+// SHEETS
+// ================================================================
+function openSheet(id){document.getElementById(id).classList.add('on')}
+function closeSheet(id){document.getElementById(id).classList.remove('on')}
+function ovlClose(e,id){if(e.target.id===id) closeSheet(id)}
+
+// ================================================================
+// TOAST
+// ================================================================
+let toastT;
+function toast(msg, err) {
+  const el=document.getElementById('toastEl');
+  el.textContent=msg;
+  el.className='toast'+(err?' err':'')+' on';
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>el.classList.remove('on'),2800);
+}
+
+// ================================================================
+// SERVICE WORKER
+// ================================================================
+if('serviceWorker' in navigator) {
+  const sw=`
+const V='kdxi-v2';
+self.addEventListener('install',()=>self.skipWaiting());
+self.addEventListener('activate',e=>e.waitUntil(clients.claim()));
+self.addEventListener('fetch',e=>{
+  if(e.request.mode==='navigate'){
+    e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));
+  }
+});`;
+  const blob=new Blob([sw],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+
+// ================================================================
+// INIT
+// ================================================================
+window.addEventListener('DOMContentLoaded',()=>{
+  // Register inline manifest
+  const manifest={name:"KD's XI — Cricket Fantasy",short_name:"KD's XI",start_url:"./",display:"standalone",background_color:"#03080f",theme_color:"#03080f"};
+  const mb=new Blob([JSON.stringify(manifest)],{type:'application/json'});
+  const link=document.createElement('link');link.rel='manifest';link.href=URL.createObjectURL(mb);
+  document.head.appendChild(link);
+
+  initSupabase();
+
+  if(loadLocal()){
+    boot();
+  }
+});
+</script>
+</body>
+</html>
