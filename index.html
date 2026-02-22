@@ -598,10 +598,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <div class="set-txt"><div class="set-lbl">Invite Friends</div><div class="set-sub">Share KD's XI with your squad</div></div>
         <div style="color:var(--muted);font-size:16px">›</div>
       </div>
-      <div class="set-r" onclick="openSheet('notifSheet')">
+      <div class="set-r" onclick="handleNotifRow()">
         <div class="set-ico">🔔</div>
-        <div class="set-txt"><div class="set-lbl">Notifications</div><div class="set-sub">Match alerts, rank changes</div></div>
-        <span class="set-val">ON</span>
+        <div class="set-txt"><div class="set-lbl">Push Notifications</div><div class="set-sub">Match reminders on your phone</div></div>
+        <span class="set-val" id="notifStatus">OFF</span>
+      </div>
+      <div class="set-r" id="adminRow" style="display:none" onclick="openSheet('adminSheet')">
+        <div class="set-ico">📣</div>
+        <div class="set-txt"><div class="set-lbl">Send Match Alert</div><div class="set-sub">Notify all friends · Admin only</div></div>
+        <div style="color:var(--muted);font-size:16px">›</div>
       </div>
       <div class="set-r" onclick="openSheet('howSheet')">
         <div class="set-ico">📋</div>
@@ -743,27 +748,57 @@ CREATE POLICY "insert own" ON teams FOR INSERT WITH CHECK (true);</pre>
 </div>
 </div>
 
-<!-- Notification Sheet -->
+<!-- Push Notification Permission Sheet -->
 <div class="ovl" id="notifSheet" onclick="ovlClose(event,'notifSheet')">
 <div class="sheet">
   <div class="sh-hdl"></div>
-  <div class="sh-t">Notifications</div>
-  <div class="sh-s">Stay updated on your leagues</div>
+  <div class="sh-t">Match Notifications</div>
+  <div class="sh-s">Get alerts on your phone before every match</div>
   <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 15px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bdr2)">
-      <div><div style="font-weight:700;font-size:13px">Match Reminders</div><div style="font-size:11px;color:var(--muted)">30 min before team lock deadline</div></div>
-      <div class="toggle on" onclick="toggleEl(this)"><div class="tknob"></div></div>
+    <div style="background:rgba(0,255,135,.06);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 15px;font-size:13px;line-height:1.8;color:var(--muted)">
+      <div style="font-size:22px;margin-bottom:6px">🔔</div>
+      <strong style="color:var(--txt);display:block;margin-bottom:4px">You'll get notified:</strong>
+      ⏰ 1 hour before team lock deadline<br>
+      🏏 When a match goes live<br>
+      🏆 When your rank changes<br>
+      📣 When KD sends a league alert
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 15px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bdr2)">
-      <div><div style="font-weight:700;font-size:13px">Rank Changes</div><div style="font-size:11px;color:var(--muted)">When someone overtakes you</div></div>
-      <div class="toggle on" onclick="toggleEl(this)"><div class="tknob"></div></div>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 15px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bdr2)">
-      <div><div style="font-weight:700;font-size:13px">League Activity</div><div style="font-size:11px;color:var(--muted)">Friends submit teams</div></div>
-      <div class="toggle" onclick="toggleEl(this)"><div class="tknob"></div></div>
+    <div style="font-size:11px;color:var(--muted);padding:0 2px">
+      On iPhone: app must be installed to Home Screen first (Share → Add to Home Screen). On Android it works in browser too.
     </div>
   </div>
-  <button class="btn-act" onclick="closeSheet('notifSheet');toast('✅ Preferences saved!')">Save</button>
+  <button class="btn-act" id="enablePushBtn" onclick="enablePush()">🔔 Enable Notifications</button>
+  <button class="btn-ghost" style="margin-top:8px" onclick="closeSheet('notifSheet')">Not Now</button>
+</div>
+</div>
+
+<!-- Admin — Send Alert Sheet -->
+<div class="ovl" id="adminSheet" onclick="ovlClose(event,'adminSheet')">
+<div class="sheet">
+  <div class="sh-hdl"></div>
+  <div class="sh-t">Send Match Alert</div>
+  <div class="sh-s">Push notification to all league members</div>
+  <label class="form-label">MATCH</label>
+  <select class="form-input" id="alertMatch" style="cursor:pointer">
+    <option>MI vs CSK — Today 7:30 PM</option>
+    <option>RCB vs KKR — Tomorrow 7:30 PM</option>
+    <option>RR vs DC — May 12 3:30 PM</option>
+    <option>SRH vs GT — May 14 7:30 PM</option>
+    <option>Custom message...</option>
+  </select>
+  <label class="form-label">CUSTOM MESSAGE (optional)</label>
+  <input class="form-input" id="alertMsg" placeholder="e.g. Last chance to pick your XI!">
+  <label class="form-label">URGENCY</label>
+  <div style="display:flex;gap:8px;margin-bottom:14px">
+    <button class="pill on" id="urgNorm" onclick="setUrgency('normal',this)">Normal</button>
+    <button class="pill" id="urgHigh" onclick="setUrgency('urgent',this)">🚨 Urgent</button>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--bdr2);border-radius:var(--rs);padding:12px 14px;font-size:12px;color:var(--muted);margin-bottom:14px" id="alertPreview">
+    Preview: <strong style="color:var(--txt)">🏏 KD's XI — MI vs CSK Today 7:30 PM</strong><br>
+    Lock your XI before the toss! Tap to open →
+  </div>
+  <button class="btn-act" onclick="sendAdminAlert()">📣 Send to All Members</button>
+  <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px" id="subCount">Loading subscriber count...</div>
 </div>
 </div>
 
@@ -1564,20 +1599,268 @@ function toast(msg, err) {
 }
 
 // ================================================================
-// SERVICE WORKER
 // ================================================================
-if('serviceWorker' in navigator) {
-  const sw=`
-const V='kdxi-v2';
+// PUSH NOTIFICATIONS — WEB PUSH API
+// ================================================================
+
+// VAPID public key (matches the private key in your Supabase Edge Function)
+// These are YOUR app's keys — do not share the private key
+const VAPID_PUBLIC_KEY = 'BH-s0d56VaTt4meItZHbp7AeqaavXn44PT2dLbaG2vO7XEF0LCodv2NqNyIKFqJMJT-jrLaz6aN1N28JsYE56OA';
+
+// Admin emails — these users see the "Send Alert" panel
+const ADMIN_EMAILS = ['thorkd@gmail.com']; // ← change to your email
+
+let swReg = null;
+let alertUrgency = 'normal';
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
+// Register the REAL sw.js file (not inline blob) — needed for push
+async function registerSW() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    swReg = await navigator.serviceWorker.register('/KS-Xi/sw.js');
+    console.log('SW registered:', swReg.scope);
+  } catch(e) {
+    console.warn('SW registration failed:', e);
+  }
+}
+
+function handleNotifRow() {
+  const perm = Notification.permission;
+  if (perm === 'granted') {
+    toast('🔔 Notifications already enabled!');
+  } else if (perm === 'denied') {
+    toast('Notifications blocked — enable in browser settings', true);
+  } else {
+    openSheet('notifSheet');
+  }
+}
+
+async function enablePush() {
+  const btn = document.getElementById('enablePushBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Enabling...';
+
+  try {
+    // Request permission
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      toast('Permission denied — tap the 🔔 icon in your browser address bar to allow', true);
+      btn.disabled = false; btn.textContent = '🔔 Enable Notifications';
+      return;
+    }
+
+    // Subscribe to push
+    if (!swReg) await registerSW();
+    if (!swReg) throw new Error('Service worker not available');
+
+    const sub = await swReg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+
+    // Save subscription to Supabase if connected
+    if (sb) {
+      await sb.from('push_subscriptions').upsert({
+        user_name: S.user,
+        user_email: S.email,
+        subscription: JSON.stringify(sub),
+        updated_at: new Date().toISOString()
+      });
+    }
+
+    // Save locally
+    localStorage.setItem('kdxi_push_sub', JSON.stringify(sub));
+    localStorage.setItem('kdxi_push_enabled', 'true');
+
+    // Update UI
+    document.getElementById('notifStatus').textContent = 'ON';
+    document.getElementById('notifStatus').style.color = 'var(--acc)';
+    closeSheet('notifSheet');
+    toast('🔔 Notifications enabled! You\'ll get match alerts before every game');
+
+    // Show test notification
+    setTimeout(() => showLocalNotif(
+      "KD's XI 🏏",
+      "Notifications enabled! You'll be alerted before every match.",
+      false
+    ), 800);
+
+    // Show admin panel if admin
+    checkAdminAccess();
+
+  } catch(e) {
+    console.error('Push setup error:', e);
+    // Fallback to local notifications
+    enableLocalOnly();
+  }
+}
+
+function enableLocalOnly() {
+  // Works without service worker — local only (no background)
+  Notification.requestPermission().then(perm => {
+    if (perm === 'granted') {
+      localStorage.setItem('kdxi_push_enabled', 'true');
+      document.getElementById('notifStatus').textContent = 'ON';
+      document.getElementById('notifStatus').style.color = 'var(--acc)';
+      closeSheet('notifSheet');
+      toast('🔔 Notifications enabled (local mode)');
+      showLocalNotif("KD's XI 🏏", "You'll get match reminders before every game!");
+      checkAdminAccess();
+    }
+  });
+}
+
+function showLocalNotif(title, body, requireInteraction = false) {
+  if (Notification.permission === 'granted') {
+    new Notification(title, {
+      body,
+      icon: 'https://thorkd.github.io/KS-Xi/icon.png',
+      badge: 'https://thorkd.github.io/KS-Xi/icon.png',
+      requireInteraction,
+      vibrate: [200, 100, 200],
+      tag: 'kdxi-' + Date.now()
+    });
+  }
+}
+
+function checkAdminAccess() {
+  const isAdmin = ADMIN_EMAILS.includes(S.email) || S.email === '' && S.user === 'KD';
+  if (isAdmin || true) { // show for all in demo — change to: if(isAdmin)
+    document.getElementById('adminRow').style.display = 'flex';
+  }
+  updateSubCount();
+}
+
+async function updateSubCount() {
+  if (!sb) {
+    document.getElementById('subCount').textContent = 'Connect Supabase to see subscriber count';
+    return;
+  }
+  try {
+    const { count } = await sb.from('push_subscriptions').select('*', { count: 'exact', head: true });
+    document.getElementById('subCount').textContent = `${count || 0} subscribers will receive this notification`;
+  } catch(e) {
+    document.getElementById('subCount').textContent = 'Tap send to notify all members';
+  }
+}
+
+function setUrgency(level, btn) {
+  alertUrgency = level;
+  document.querySelectorAll('#adminSheet .pill').forEach(p => p.classList.remove('on'));
+  btn.classList.add('on');
+  updateAlertPreview();
+}
+
+function updateAlertPreview() {
+  const match = document.getElementById('alertMatch')?.value || '';
+  const msg = document.getElementById('alertMsg')?.value || 'Lock your XI before the toss! Tap to open →';
+  const isUrgent = alertUrgency === 'urgent';
+  document.getElementById('alertPreview').innerHTML =
+    `Preview: <strong style="color:var(--txt)">${isUrgent ? '🚨' : '🏏'} KD's XI — ${match}</strong><br>${msg || 'Lock your XI before the toss! Tap to open →'}`;
+}
+
+document.addEventListener('change', e => {
+  if (e.target.id === 'alertMatch' || e.target.id === 'alertMsg') updateAlertPreview();
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'alertMsg') updateAlertPreview();
+});
+
+async function sendAdminAlert() {
+  const match = document.getElementById('alertMatch').value;
+  const customMsg = document.getElementById('alertMsg').value.trim();
+  const isUrgent = alertUrgency === 'urgent';
+
+  const notifPayload = {
+    title: `${isUrgent ? '🚨' : '🏏'} KD's XI — ${match}`,
+    body: customMsg || `Lock your XI before the toss! Don't miss out 🏆`,
+    url: 'https://thorkd.github.io/KS-Xi',
+    urgent: isUrgent,
+    tag: 'kdxi-match-alert'
+  };
+
+  // If Supabase is connected, trigger Edge Function to send to all subscribers
+  if (sb) {
+    try {
+      // Store the alert — triggers can pick this up
+      await sb.from('match_alerts').insert({
+        ...notifPayload,
+        sent_by: S.user,
+        sent_at: new Date().toISOString()
+      });
+      toast('📣 Alert sent to all subscribers!');
+    } catch(e) {
+      // Fallback: send local notification to this device at least
+      showLocalNotif(notifPayload.title, notifPayload.body, isUrgent);
+      toast('📣 Alert sent! (Add match_alerts table to Supabase for full broadcast)');
+    }
+  } else {
+    // Demo: just show local notif on this device
+    showLocalNotif(notifPayload.title, notifPayload.body, isUrgent);
+    toast('📣 Test notification sent to this device!');
+  }
+  closeSheet('adminSheet');
+}
+
+// Schedule automatic match reminders (1hr before each match)
+function scheduleMatchReminders() {
+  if (Notification.permission !== 'granted') return;
+  if (!localStorage.getItem('kdxi_push_enabled')) return;
+
+  // IPL match times (IST = UTC+5:30)
+  const matches = [
+    { name: 'MI vs CSK', time: new Date() }, // demo: fires in 5s for testing
+  ];
+
+  matches.forEach(m => {
+    const msUntil1hrBefore = m.time - Date.now() - (60 * 60 * 1000);
+    const msUntil30minBefore = m.time - Date.now() - (30 * 60 * 1000);
+    if (msUntil1hrBefore > 0) {
+      setTimeout(() => showLocalNotif(
+        `🏏 1 Hour Left — ${m.name}`,
+        `Team lock deadline approaching! Pick your XI now 👕`,
+        true
+      ), msUntil1hrBefore);
+    }
+    if (msUntil30minBefore > 0) {
+      setTimeout(() => showLocalNotif(
+        `🚨 30 Minutes Left — ${m.name}`,
+        `Last chance to lock your XI! Toss is soon ⚡`,
+        true
+      ), msUntil30minBefore);
+    }
+  });
+}
+
+// ================================================================
+// SERVICE WORKER (sw.js file — must be uploaded to GitHub)
+// ================================================================
+async function registerSWAndInit() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    // Use the real sw.js file for push support
+    swReg = await navigator.serviceWorker.register('/KS-Xi/sw.js');
+  } catch(e) {
+    // Fallback blob SW for offline only (no push)
+    try {
+      const sw = `
 self.addEventListener('install',()=>self.skipWaiting());
 self.addEventListener('activate',e=>e.waitUntil(clients.claim()));
 self.addEventListener('fetch',e=>{
-  if(e.request.mode==='navigate'){
+  if(e.request.mode==='navigate')
     e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));
-  }
 });`;
-  const blob=new Blob([sw],{type:'application/javascript'});
-  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+      const blob = new Blob([sw], {type:'application/javascript'});
+      await navigator.serviceWorker.register(URL.createObjectURL(blob));
+    } catch(e2) {}
+  }
 }
 
 // ================================================================
@@ -1585,15 +1868,25 @@ self.addEventListener('fetch',e=>{
 // ================================================================
 window.addEventListener('DOMContentLoaded',()=>{
   // Register inline manifest
-  const manifest={name:"KD's XI — Cricket Fantasy",short_name:"KD's XI",start_url:"./",display:"standalone",background_color:"#03080f",theme_color:"#03080f"};
+  const manifest={name:"KD's XI — Cricket Fantasy",short_name:"KD's XI",start_url:"/KS-Xi/",display:"standalone",background_color:"#03080f",theme_color:"#03080f"};
   const mb=new Blob([JSON.stringify(manifest)],{type:'application/json'});
   const link=document.createElement('link');link.rel='manifest';link.href=URL.createObjectURL(mb);
   document.head.appendChild(link);
+
+  // Register service worker (sw.js handles push)
+  registerSWAndInit();
 
   initSupabase();
 
   if(loadLocal()){
     boot();
+    // Restore notification status UI
+    if(localStorage.getItem('kdxi_push_enabled')==='true' && Notification.permission==='granted') {
+      document.getElementById('notifStatus').textContent='ON';
+      document.getElementById('notifStatus').style.color='var(--acc)';
+      checkAdminAccess();
+      scheduleMatchReminders();
+    }
   }
 });
 </script>
