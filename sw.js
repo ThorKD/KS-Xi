@@ -1,33 +1,18 @@
-// KD's XI — Service Worker v3 (force update)
-const CACHE = 'kdxi-v3';
+// KD's XI — Service Worker v4
+// Push notifications ONLY — no caching, no fetch interception
+// This ensures the app always loads fresh from GitHub
 
-self.addEventListener('install', e => {
-  self.skipWaiting();
-});
-
+self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => {
-  // Delete ALL old caches
+  // Nuke all old caches
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(keys.map(k => caches.delete(k))))
+      .then(() => clients.claim())
   );
 });
 
-// Network-first — always fetch fresh, fall back to cache
-self.addEventListener('fetch', e => {
-  if (e.request.mode === 'navigate') {
-    e.respondWith(
-      fetch(e.request, { cache: 'no-store' })
-        .then(res => {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-          return res;
-        })
-        .catch(() => caches.match(e.request))
-    );
-  }
-});
+// NO fetch handler — let browser load everything fresh from network
 
 // Push notifications
 self.addEventListener('push', e => {
