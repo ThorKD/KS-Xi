@@ -840,30 +840,136 @@ function initSupabase() {
 // ================================================================
 // PLAYER DATA (demo — replaced by CricAPI when key is set)
 // ================================================================
-const DEMO_PLAYERS = [
-  // Wicket Keepers
-  {id:1,name:'Rishabh Pant',em:'🧤',team:'IND',role:'WK',credits:9.5,pts:312,avg:48,form:['w','w','w','l','w']},
-  {id:2,name:'Jos Buttler',em:'💥',team:'ENG',role:'WK',credits:9.5,pts:298,avg:46,form:['w','l','w','w','l']},
-  {id:3,name:'Mohammad Rizwan',em:'🛡️',team:'PAK',role:'WK',credits:9,pts:276,avg:44,form:['l','w','w','l','w']},
-  // Batters
-  {id:4,name:'Virat Kohli',em:'👑',team:'IND',role:'BAT',credits:11,pts:498,avg:72,form:['w','w','w','w','w']},
-  {id:5,name:'Rohit Sharma',em:'🎯',team:'IND',role:'BAT',credits:10.5,pts:421,avg:64,form:['w','w','l','w','w']},
-  {id:6,name:'David Warner',em:'🔥',team:'AUS',role:'BAT',credits:9.5,pts:388,avg:58,form:['w','l','w','w','l']},
-  {id:7,name:'Babar Azam',em:'🌟',team:'PAK',role:'BAT',credits:10,pts:410,avg:62,form:['w','w','w','l','w']},
-  {id:8,name:'Quinton de Kock',em:'⚡',team:'SA',role:'BAT',credits:9,pts:356,avg:54,form:['w','w','w','l','w']},
-  {id:9,name:'Devon Conway',em:'🏹',team:'NZ',role:'BAT',credits:8.5,pts:312,avg:48,form:['l','w','l','w','w']},
-  // All Rounders
-  {id:10,name:'Hardik Pandya',em:'💪',team:'IND',role:'AR',credits:10,pts:445,avg:66,form:['w','w','w','w','l']},
-  {id:11,name:'Ben Stokes',em:'🦁',team:'ENG',role:'AR',credits:10,pts:432,avg:64,form:['w','l','w','w','w']},
-  {id:12,name:'Shakib Al Hasan',em:'🐍',team:'BAN',role:'AR',credits:9,pts:378,avg:56,form:['l','w','w','l','w']},
-  {id:13,name:'Glenn Maxwell',em:'🌪️',team:'AUS',role:'AR',credits:9.5,pts:398,avg:60,form:['w','w','l','w','w']},
-  // Bowlers
-  {id:14,name:'Jasprit Bumrah',em:'🚀',team:'IND',role:'BOWL',credits:10.5,pts:468,avg:69,form:['w','w','w','w','w']},
-  {id:15,name:'Shaheen Afridi',em:'🌀',team:'PAK',role:'BOWL',credits:9.5,pts:412,avg:61,form:['w','w','w','l','w']},
-  {id:16,name:'Rashid Khan',em:'🕷️',team:'AFG',role:'BOWL',credits:10,pts:445,avg:66,form:['w','w','w','w','l']},
-  {id:17,name:'Trent Boult',em:'💨',team:'NZ',role:'BOWL',credits:9,pts:367,avg:54,form:['w','l','w','w','w']},
-  {id:18,name:'Adil Rashid',em:'🎪',team:'ENG',role:'BOWL',credits:8.5,pts:334,avg:50,form:['w','w','l','w','l']},
-];
+// T20 WC 2026 — player pool per team (Super 8 squads)
+const TEAM_SQUADS = {
+  'IND': [
+    {id:101,name:'Rohit Sharma',em:'🎯',team:'IND',role:'BAT',credits:10.5,pts:421,avg:64,form:['w','w','l','w','w']},
+    {id:102,name:'Virat Kohli',em:'👑',team:'IND',role:'BAT',credits:11,pts:498,avg:72,form:['w','w','w','w','w']},
+    {id:103,name:'Suryakumar Yadav',em:'🌪️',team:'IND',role:'BAT',credits:10,pts:445,avg:66,form:['w','w','w','w','l']},
+    {id:104,name:'Hardik Pandya',em:'💪',team:'IND',role:'AR',credits:9.5,pts:398,avg:60,form:['w','w','l','w','w']},
+    {id:105,name:'Rishabh Pant',em:'🧤',team:'IND',role:'WK',credits:9.5,pts:312,avg:48,form:['w','w','w','l','w']},
+    {id:106,name:'Jasprit Bumrah',em:'🚀',team:'IND',role:'BOWL',credits:10.5,pts:468,avg:69,form:['w','w','w','w','w']},
+    {id:107,name:'Ravindra Jadeja',em:'🐍',team:'IND',role:'AR',credits:9,pts:378,avg:56,form:['l','w','w','l','w']},
+    {id:108,name:'Axar Patel',em:'🎭',team:'IND',role:'AR',credits:8.5,pts:334,avg:50,form:['w','w','l','w','l']},
+    {id:109,name:'Arshdeep Singh',em:'⚡',team:'IND',role:'BOWL',credits:8.5,pts:321,avg:48,form:['w','l','w','w','w']},
+    {id:110,name:'Kuldeep Yadav',em:'🕷️',team:'IND',role:'BOWL',credits:9,pts:356,avg:54,form:['w','w','w','l','w']},
+    {id:111,name:'Shivam Dube',em:'🔨',team:'IND',role:'AR',credits:8,pts:289,avg:43,form:['w','w','l','l','w']},
+    {id:112,name:'Yashasvi Jaiswal',em:'🌟',team:'IND',role:'BAT',credits:9,pts:367,avg:55,form:['w','w','w','w','l']},
+  ],
+  'PAK': [
+    {id:201,name:'Babar Azam',em:'🌟',team:'PAK',role:'BAT',credits:10,pts:410,avg:62,form:['w','w','w','l','w']},
+    {id:202,name:'Mohammad Rizwan',em:'🛡️',team:'PAK',role:'WK',credits:9.5,pts:398,avg:60,form:['w','w','l','w','w']},
+    {id:203,name:'Shaheen Afridi',em:'🌀',team:'PAK',role:'BOWL',credits:9.5,pts:412,avg:61,form:['w','w','w','l','w']},
+    {id:204,name:'Shadab Khan',em:'🎯',team:'PAK',role:'AR',credits:8.5,pts:334,avg:50,form:['w','l','w','w','l']},
+    {id:205,name:'Fakhar Zaman',em:'💥',team:'PAK',role:'BAT',credits:8.5,pts:312,avg:47,form:['l','w','w','l','w']},
+    {id:206,name:'Imad Wasim',em:'🔥',team:'PAK',role:'AR',credits:8,pts:289,avg:43,form:['w','w','l','w','w']},
+    {id:207,name:'Naseem Shah',em:'⚡',team:'PAK',role:'BOWL',credits:8.5,pts:321,avg:48,form:['w','l','w','w','w']},
+    {id:208,name:'Mohammad Nawaz',em:'🎭',team:'PAK',role:'AR',credits:7.5,pts:267,avg:40,form:['l','w','l','w','w']},
+    {id:209,name:'Saim Ayub',em:'🌱',team:'PAK',role:'BAT',credits:8,pts:298,avg:45,form:['w','w','w','l','l']},
+    {id:210,name:'Haris Rauf',em:'💨',team:'PAK',role:'BOWL',credits:8,pts:289,avg:43,form:['w','l','w','w','l']},
+    {id:211,name:'Iftikhar Ahmed',em:'🏹',team:'PAK',role:'AR',credits:7.5,pts:256,avg:38,form:['w','w','l','l','w']},
+  ],
+  'ENG': [
+    {id:301,name:'Jos Buttler',em:'💥',team:'ENG',role:'WK',credits:9.5,pts:298,avg:46,form:['w','l','w','w','l']},
+    {id:302,name:'Phil Salt',em:'🔥',team:'ENG',role:'BAT',credits:9,pts:356,avg:54,form:['w','w','w','l','w']},
+    {id:303,name:'Ben Stokes',em:'🦁',team:'ENG',role:'AR',credits:10,pts:432,avg:64,form:['w','l','w','w','w']},
+    {id:304,name:'Liam Livingstone',em:'💪',team:'ENG',role:'AR',credits:9,pts:378,avg:57,form:['w','w','l','w','w']},
+    {id:305,name:'Adil Rashid',em:'🎪',team:'ENG',role:'BOWL',credits:8.5,pts:334,avg:50,form:['w','w','l','w','l']},
+    {id:306,name:'Mark Wood',em:'🚀',team:'ENG',role:'BOWL',credits:9,pts:367,avg:55,form:['w','w','w','l','w']},
+    {id:307,name:'Harry Brook',em:'🌟',team:'ENG',role:'BAT',credits:9.5,pts:389,avg:58,form:['w','w','w','w','l']},
+    {id:308,name:'Will Jacks',em:'🎯',team:'ENG',role:'AR',credits:8.5,pts:312,avg:47,form:['l','w','w','w','w']},
+    {id:309,name:'Jofra Archer',em:'⚡',team:'ENG',role:'BOWL',credits:9,pts:356,avg:53,form:['w','l','w','w','w']},
+    {id:310,name:'Sam Curran',em:'🌀',team:'ENG',role:'AR',credits:8.5,pts:321,avg:48,form:['w','w','l','l','w']},
+    {id:311,name:'Dawid Malan',em:'🏹',team:'ENG',role:'BAT',credits:8,pts:278,avg:42,form:['l','w','l','w','w']},
+  ],
+  'SA': [
+    {id:401,name:'Quinton de Kock',em:'⚡',team:'SA',role:'WK',credits:9.5,pts:389,avg:58,form:['w','w','w','l','w']},
+    {id:402,name:'Aiden Markram',em:'🎯',team:'SA',role:'BAT',credits:9,pts:356,avg:54,form:['w','l','w','w','w']},
+    {id:403,name:'Kagiso Rabada',em:'🚀',team:'SA',role:'BOWL',credits:9.5,pts:401,avg:60,form:['w','w','w','w','l']},
+    {id:404,name:'David Miller',em:'🔨',team:'SA',role:'BAT',credits:9,pts:367,avg:55,form:['w','w','l','w','w']},
+    {id:405,name:'Marco Jansen',em:'🌀',team:'SA',role:'AR',credits:8.5,pts:321,avg:48,form:['w','l','w','w','w']},
+    {id:406,name:'Anrich Nortje',em:'💨',team:'SA',role:'BOWL',credits:8.5,pts:312,avg:47,form:['l','w','w','l','w']},
+    {id:407,name:'Reeza Hendricks',em:'🌟',team:'SA',role:'BAT',credits:8,pts:289,avg:43,form:['w','w','l','w','l']},
+    {id:408,name:'Heinrich Klaasen',em:'💥',team:'SA',role:'WK',credits:9,pts:356,avg:54,form:['w','w','w','w','l']},
+    {id:409,name:'Keshav Maharaj',em:'🕷️',team:'SA',role:'BOWL',credits:8,pts:278,avg:42,form:['w','l','w','w','l']},
+    {id:410,name:'Tristan Stubbs',em:'🏹',team:'SA',role:'BAT',credits:8,pts:267,avg:40,form:['l','w','w','l','w']},
+    {id:411,name:'Gerald Coetzee',em:'⚡',team:'SA',role:'BOWL',credits:8,pts:289,avg:43,form:['w','w','l','w','w']},
+  ],
+  'AUS': [
+    {id:501,name:'David Warner',em:'🔥',team:'AUS',role:'BAT',credits:9.5,pts:388,avg:58,form:['w','l','w','w','l']},
+    {id:502,name:'Travis Head',em:'💥',team:'AUS',role:'BAT',credits:10,pts:421,avg:63,form:['w','w','w','l','w']},
+    {id:503,name:'Glenn Maxwell',em:'🌪️',team:'AUS',role:'AR',credits:9.5,pts:398,avg:60,form:['w','w','l','w','w']},
+    {id:504,name:'Mitchell Starc',em:'🚀',team:'AUS',role:'BOWL',credits:9,pts:367,avg:55,form:['w','w','w','l','w']},
+    {id:505,name:'Pat Cummins',em:'🎯',team:'AUS',role:'BOWL',credits:9.5,pts:389,avg:58,form:['w','l','w','w','w']},
+    {id:506,name:'Matthew Wade',em:'🧤',team:'AUS',role:'WK',credits:8,pts:267,avg:40,form:['l','w','l','w','w']},
+    {id:507,name:'Josh Inglis',em:'⚡',team:'AUS',role:'WK',credits:8.5,pts:298,avg:45,form:['w','w','l','w','l']},
+    {id:508,name:'Marcus Stoinis',em:'💪',team:'AUS',role:'AR',credits:9,pts:356,avg:53,form:['w','w','w','l','w']},
+    {id:509,name:'Adam Zampa',em:'🕷️',team:'AUS',role:'BOWL',credits:8.5,pts:321,avg:48,form:['w','l','w','w','w']},
+    {id:510,name:'Tim David',em:'🌟',team:'AUS',role:'BAT',credits:8.5,pts:312,avg:47,form:['w','w','l','w','l']},
+  ],
+  'NZ': [
+    {id:601,name:'Devon Conway',em:'🏹',team:'NZ',role:'WK',credits:9,pts:356,avg:54,form:['w','w','l','w','w']},
+    {id:602,name:'Finn Allen',em:'💥',team:'NZ',role:'BAT',credits:8.5,pts:321,avg:48,form:['w','l','w','w','l']},
+    {id:603,name:'Trent Boult',em:'💨',team:'NZ',role:'BOWL',credits:9,pts:367,avg:54,form:['w','l','w','w','w']},
+    {id:604,name:'Daryl Mitchell',em:'🎯',team:'NZ',role:'AR',credits:9,pts:356,avg:54,form:['w','w','w','l','w']},
+    {id:605,name:'Kane Williamson',em:'👑',team:'NZ',role:'BAT',credits:9.5,pts:389,avg:58,form:['l','w','w','w','w']},
+    {id:606,name:'Tim Southee',em:'🌀',team:'NZ',role:'BOWL',credits:8.5,pts:312,avg:47,form:['w','w','l','w','l']},
+    {id:607,name:'Rachin Ravindra',em:'🌟',team:'NZ',role:'AR',credits:8.5,pts:321,avg:48,form:['w','l','w','w','w']},
+    {id:608,name:'Mitchell Santner',em:'🕷️',team:'NZ',role:'AR',credits:8,pts:289,avg:43,form:['w','w','l','l','w']},
+    {id:609,name:'Glenn Phillips',em:'⚡',team:'NZ',role:'AR',credits:8.5,pts:312,avg:47,form:['l','w','w','w','l']},
+    {id:610,name:'Lockie Ferguson',em:'🚀',team:'NZ',role:'BOWL',credits:8.5,pts:321,avg:48,form:['w','w','w','l','w']},
+  ],
+  'SL': [
+    {id:701,name:'Pathum Nissanka',em:'🌟',team:'SL',role:'BAT',credits:8.5,pts:312,avg:47,form:['w','w','l','w','w']},
+    {id:702,name:'Kusal Mendis',em:'💥',team:'SL',role:'WK',credits:9,pts:356,avg:54,form:['w','l','w','w','w']},
+    {id:703,name:'Wanindu Hasaranga',em:'🕷️',team:'SL',role:'AR',credits:9.5,pts:401,avg:60,form:['w','w','w','w','l']},
+    {id:704,name:'Dasun Shanaka',em:'💪',team:'SL',role:'AR',credits:8,pts:278,avg:42,form:['l','w','l','w','w']},
+    {id:705,name:'Dushmantha Chameera',em:'🌀',team:'SL',role:'BOWL',credits:8.5,pts:312,avg:47,form:['w','w','l','w','l']},
+    {id:706,name:'Maheesh Theekshana',em:'🎯',team:'SL',role:'BOWL',credits:8.5,pts:321,avg:48,form:['w','l','w','w','w']},
+    {id:707,name:'Charith Asalanka',em:'🏹',team:'SL',role:'BAT',credits:8,pts:289,avg:43,form:['w','w','w','l','l']},
+    {id:708,name:'Dinesh Chandimal',em:'🧤',team:'SL',role:'WK',credits:7.5,pts:245,avg:37,form:['l','w','l','w','w']},
+    {id:709,name:'Matheesha Pathirana',em:'🚀',team:'SL',role:'BOWL',credits:8.5,pts:321,avg:48,form:['w','w','w','l','w']},
+    {id:710,name:'Angelo Mathews',em:'🦁',team:'SL',role:'AR',credits:8,pts:278,avg:42,form:['w','l','w','w','l']},
+  ],
+  'WI': [
+    {id:801,name:'Nicholas Pooran',em:'💥',team:'WI',role:'WK',credits:9.5,pts:389,avg:58,form:['w','w','l','w','w']},
+    {id:802,name:'Shai Hope',em:'🏹',team:'WI',role:'WK',credits:8.5,pts:312,avg:47,form:['w','l','w','w','l']},
+    {id:803,name:'Rovman Powell',em:'🔨',team:'WI',role:'BAT',credits:8.5,pts:321,avg:48,form:['w','w','w','l','w']},
+    {id:804,name:'Andre Russell',em:'💪',team:'WI',role:'AR',credits:10,pts:432,avg:65,form:['w','w','l','w','w']},
+    {id:805,name:'Jason Holder',em:'🦁',team:'WI',role:'AR',credits:8.5,pts:312,avg:47,form:['l','w','w','l','w']},
+    {id:806,name:'Alzarri Joseph',em:'🚀',team:'WI',role:'BOWL',credits:8.5,pts:321,avg:48,form:['w','w','l','w','w']},
+    {id:807,name:'Kyle Mayers',em:'⚡',team:'WI',role:'AR',credits:8,pts:289,avg:43,form:['w','l','w','w','l']},
+    {id:808,name:'Shimron Hetmyer',em:'🔥',team:'WI',role:'BAT',credits:8.5,pts:312,avg:47,form:['w','w','w','l','w']},
+    {id:809,name:'Akeal Hosein',em:'🕷️',team:'WI',role:'BOWL',credits:7.5,pts:245,avg:37,form:['l','w','l','w','w']},
+    {id:810,name:'Brandon King',em:'🌟',team:'WI',role:'BAT',credits:8,pts:278,avg:42,form:['w','w','l','w','l']},
+  ],
+  'ZIM': [
+    {id:901,name:'Sikandar Raza',em:'🌟',team:'ZIM',role:'AR',credits:9,pts:367,avg:55,form:['w','l','w','w','w']},
+    {id:902,name:'Sean Williams',em:'🎯',team:'ZIM',role:'AR',credits:8,pts:289,avg:43,form:['w','w','l','w','l']},
+    {id:903,name:'Craig Ervine',em:'🏹',team:'ZIM',role:'BAT',credits:7.5,pts:245,avg:37,form:['l','w','l','w','w']},
+    {id:904,name:'Regis Chakabva',em:'🧤',team:'ZIM',role:'WK',credits:7.5,pts:234,avg:35,form:['w','l','w','l','w']},
+    {id:905,name:'Tendai Chatara',em:'🌀',team:'ZIM',role:'BOWL',credits:7.5,pts:245,avg:37,form:['w','w','l','l','w']},
+    {id:906,name:'Blessing Muzarabani',em:'🚀',team:'ZIM',role:'BOWL',credits:8,pts:278,avg:42,form:['w','w','w','l','l']},
+    {id:907,name:'Ryan Burl',em:'⚡',team:'ZIM',role:'AR',credits:7.5,pts:245,avg:37,form:['l','w','w','w','l']},
+    {id:908,name:'Wesley Madhevere',em:'💥',team:'ZIM',role:'BAT',credits:7.5,pts:234,avg:35,form:['w','l','w','w','l']},
+    {id:909,name:'Tanaka Chivanga',em:'💨',team:'ZIM',role:'BOWL',credits:7,pts:212,avg:32,form:['w','w','l','l','w']},
+    {id:910,name:'Takudzwanashe Kaitano',em:'🌱',team:'ZIM',role:'BAT',credits:7,pts:198,avg:30,form:['l','w','l','w','w']},
+  ],
+  'TBA': [
+    {id:999,name:'TBA',em:'❓',team:'TBA',role:'BAT',credits:8,pts:0,avg:0,form:['l','l','l','l','l']},
+  ],
+};
+
+// Build player pool for a given match (t1 vs t2)
+function getPlayersForMatch(t1, t2) {
+  const squad1 = TEAM_SQUADS[t1] || [];
+  const squad2 = TEAM_SQUADS[t2] || [];
+  // Fallback: if unknown team, use all players
+  if(!squad1.length && !squad2.length) return DEMO_PLAYERS;
+  return [...squad1, ...squad2];
+}
+
+const DEMO_PLAYERS = getPlayersForMatch('IND', 'PAK'); // default
 
 const DEMO_MATCHES = [
   {id:'m1',t1:'IND',t2:'PAK',f1:'🇮🇳',f2:'🇵🇰',status:'soon',when:'TOMORROW 7:00 PM IST',sc1:'—',sc2:'—',venue:'Nassau County',label:'T20I · Group A'},
@@ -1087,7 +1193,7 @@ function renderMatches() {
     return;
   }
   ml.innerHTML = S.matchData.map(m => `
-    <div class="mc" onclick="goTeam('${m.t1} vs ${m.t2}')">
+    <div class="mc" onclick="goTeam('${m.t1}','${m.t2}','${m.t1} vs ${m.t2}')">
       <div class="mc-banner">
         <div class="mc-status ${m.status==='live'?'live':'soon'}">${m.status==='live'?'LIVE · '+m.over+' OV':m.when}</div>
         <div class="teams">
@@ -1098,14 +1204,29 @@ function renderMatches() {
       </div>
       <div class="mc-foot">
         <div class="mc-meta">📍 ${m.venue||'TBA'} · ${m.label}</div>
-        <button class="mc-btn" onclick="event.stopPropagation();goTeam('${m.t1} vs ${m.t2}')">${m.status==='live'?'Edit XI':'Pick XI'}</button>
+        <button class="mc-btn" onclick="event.stopPropagation();goTeam('${m.t1}','${m.t2}','${m.t1} vs ${m.t2}')">${m.status==='live'?'Edit XI':'Pick XI'}</button>
       </div>
     </div>`).join('');
 }
 
-function goTeam(match) {
-  S.currentMatch = match;
-  document.getElementById('matchLbl').textContent = match;
+function goTeam(t1, t2, matchName) {
+  const label = matchName || `${t1} vs ${t2}`;
+  S.currentMatch = label;
+  S.currentMatchTeams = [t1, t2];
+  document.getElementById('matchLbl').textContent = label;
+
+  // Load players for this specific match
+  const pool = getPlayersForMatch(t1, t2);
+  S.playerData = pool;
+
+  // Reset XI selection for new match
+  S.selected = new Set();
+  S.credits = 100;
+  S.capId = null;
+  S.vcId = null;
+  S.role = 'ALL';
+
+  saveLocal();
   nav('team');
 }
 
