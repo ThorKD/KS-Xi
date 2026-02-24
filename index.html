@@ -1236,17 +1236,24 @@ async function fetchLiveScores() {
   const BASE = 'https://api.cricapi.com/v1';
 
   try {
-    // Fire all 3 endpoints in parallel
-    const [liveRes, upcomingRes] = await Promise.allSettled([
+    // Fire general endpoints in parallel
+    const [liveRes, upcomingRes, seriesRes] = await Promise.allSettled([
       fetch(`${BASE}/currentMatches?apikey=${key}&offset=0`).then(r=>r.json()),
       fetch(`${BASE}/matches?apikey=${key}&offset=0`).then(r=>r.json()),
+      fetch(`${BASE}/series?apikey=${key}&offset=0`).then(r=>r.json()),
     ]);
 
     let allMatches = [];
     const seen = new Set();
 
-    // 1. Live/current matches — exclude completed ones
+    const isWC = m => {
+      const n = (m.name || m.series || '').toLowerCase();
+      return n.includes('world cup') || n.includes('t20 world') || n.includes('icc men');
+    };
+
+    // 1. Current/live matches — WC first
     if(liveRes.status==='fulfilled' && liveRes.value?.status==='success') {
+      const wcLive = [], otherLive = [];
       (liveRes.value.data || [])
         .filter(m => {
           if(m.matchEnded) return false;
@@ -1255,34 +1262,67 @@ async function fetchLiveScores() {
           return true;
         })
         .forEach(m => {
-          if(!seen.has(m.id)) { seen.add(m.id); allMatches.push({...m, _src:'live'}); }
+          if(!seen.has(m.id)) {
+            seen.add(m.id);
+            (isWC(m) ? wcLive : otherLive).push({...m, _src:'live'});
+          }
         });
+      allMatches.push(...wcLive, ...otherLive);
     }
 
-    // 2. Upcoming fixtures — strictly future only
+    // 2. Upcoming — WC first, strictly future
     if(upcomingRes.status==='fulfilled' && upcomingRes.value?.status==='success') {
       const now = Date.now();
+      const wcUp = [], otherUp = [];
       (upcomingRes.value.data || [])
         .filter(m => {
           if(seen.has(m.id)) return false;
           if(m.matchEnded) return false;
-          // Exclude if result is declared
           const st = (m.status || '').toLowerCase();
           if(st.includes('won') || st.includes('abandoned') || st.includes('no result') || st.includes('draw')) return false;
-          // Exclude if match started more than 4 hours ago (it's done)
-          if(m.dateTimeGMT) {
-            const matchTime = new Date(m.dateTimeGMT).getTime();
-            if(matchTime < now - (4 * 60 * 60 * 1000)) return false;
-          }
+          if(m.dateTimeGMT && new Date(m.dateTimeGMT).getTime() < now - (4*60*60*1000)) return false;
           return true;
         })
-        .forEach(m => { seen.add(m.id); allMatches.push({...m, _src:'upcoming'}); });
+        .forEach(m => {
+          seen.add(m.id);
+          (isWC(m) ? wcUp : otherUp).push({...m, _src:'upcoming'});
+        });
+      allMatches.push(...wcUp, ...otherUp);
+    }
+
+    // 3. If no WC matches found from API, use hardcoded Super 8 fixtures
+    const hasWC = allMatches.some(isWC);
+    if(!hasWC) {
+      const now = Date.now();
+      const WC_FIXTURES = [
+        {id:'wc45',name:'PAK vs ENG, Super 8, T20 World Cup 2026',teams:['Pakistan','England'],dateTimeGMT:'2026-02-24T13:30:00',venue:'Pallekele Cricket Stadium',matchType:'t20',matchStarted:true,matchEnded:false,status:'In Progress'},
+        {id:'wc46',name:'SL vs NZ, Super 8, T20 World Cup 2026',teams:['Sri Lanka','New Zealand'],dateTimeGMT:'2026-02-25T08:00:00',venue:'R Premadasa Stadium, Colombo',matchType:'t20',matchStarted:false,matchEnded:false,status:'Match not started'},
+        {id:'wc47',name:'SA vs WI, Super 8, T20 World Cup 2026',teams:['South Africa','West Indies'],dateTimeGMT:'2026-02-26T04:00:00',venue:'Narendra Modi Stadium, Ahmedabad',matchType:'t20',matchStarted:false,matchEnded:false,status:'Match not started'},
+        {id:'wc48',name:'IND vs ZIM, Super 8, T20 World Cup 2026',teams:['India','Zimbabwe'],dateTimeGMT:'2026-02-26T08:00:00',venue:'MA Chidambaram Stadium, Chennai',matchType:'t20',matchStarted:false,matchEnded:false,status:'Match not started'},
+        {id:'wc49',name:'ENG vs NZ, Super 8, T20 World Cup 2026',teams:['England','New Zealand'],dateTimeGMT:'2026-02-27T08:00:00',venue:'R Premadasa Stadium, Colombo',matchType:'t20',matchStarted:false,matchEnded:false,status:'Match not started'},
+        {id:'wc50',name:'SL vs PAK, Super 8, T20 World Cup 2026',teams:['Sri Lanka','Pakistan'],dateTimeGMT:'2026-02-28T08:00:00',venue:'Pallekele Cricket Stadium',matchType:'t20',matchStarted:false,matchEnded:false,status:'Match not started'},
+        {id:'wc51',name:'ZIM vs SA, Super 8, T20 World Cup 2026',teams:['Zimbabwe','South Africa'],dateTimeGMT:'2026-03-01T04:00:00',venue:'Arun Jaitley Stadium, Delhi',matchType:'t20',matchStarted:false,matchEnded:false,status:'Match not started'},
+        {id:'wc52',name:'IND vs WI, Super 8, T20 World Cup 2026',teams:['India','West Indies'],dateTimeGMT:'2026-03-01T08:00:00',venue:'Eden Gardens, Kolkata',matchType:'t20',matchStarted:false,matchEnded:false,status:'Match not started'},
+        {id:'wc53',name:'Semi-Final 1, T20 World Cup 2026',teams:['TBA','TBA'],dateTimeGMT:'2026-03-04T08:00:00',venue:'Eden Gardens, Kolkata',matchType:'t20',matchStarted:false,matchEnded:false,status:'Match not started'},
+        {id:'wc54',name:'Semi-Final 2, T20 World Cup 2026',teams:['TBA','TBA'],dateTimeGMT:'2026-03-05T08:00:00',venue:'Wankhede Stadium, Mumbai',matchType:'t20',matchStarted:false,matchEnded:false,status:'Match not started'},
+        {id:'wc55',name:'Final, T20 World Cup 2026',teams:['TBA','TBA'],dateTimeGMT:'2026-03-08T08:00:00',venue:'Narendra Modi Stadium, Ahmedabad',matchType:'t20',matchStarted:false,matchEnded:false,status:'Match not started'},
+      ].filter(m => {
+        if(m.matchEnded) return false;
+        if(m.dateTimeGMT && new Date(m.dateTimeGMT).getTime() < now - (4*60*60*1000)) return false;
+        return true;
+      });
+      allMatches = [...WC_FIXTURES, ...allMatches];
     }
 
     if(!allMatches.length) {
-      // API returned nothing — keep demo data & start ticker
-      startTicker();
-      setTimeout(fetchLiveScores, 120000);
+      // API connected but no upcoming matches found
+      const ml = document.getElementById('matchList');
+      if(ml) ml.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;line-height:1.8">
+        <div style="font-size:32px;margin-bottom:10px">🏏</div>
+        No upcoming matches right now.<br>
+        <span style="font-size:11px">Check back on match days — T20 WC fixtures will appear automatically!</span>
+      </div>`;
+      setTimeout(fetchLiveScores, 300000);
       return;
     }
 
@@ -1318,7 +1358,9 @@ async function fetchLiveScores() {
 
   } catch(e) {
     console.warn('CricAPI fetch error:', e);
-    startTicker();
+    // Only retry after 2 minutes on network error, don't fall back to demo
+    setTimeout(fetchLiveScores, 120000);
+    return;
   }
 
   // Refresh: every 30s if live match, else every 5 minutes
