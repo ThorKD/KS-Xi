@@ -2216,26 +2216,20 @@ function scheduleMatchReminders() {
 }
 
 // ================================================================
-// SERVICE WORKER (sw.js file — must be uploaded to GitHub)
+// SERVICE WORKER — unregister stale ones, register fresh push-only SW
 // ================================================================
 async function registerSWAndInit() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    // Use the real sw.js file for push support
-    swReg = await navigator.serviceWorker.register('/KS-Xi/sw.js');
+    // Kill ALL existing service workers so stale caches don't block updates
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r => r.unregister()));
+
+    // Register fresh sw.js (push notifications only — no HTML caching)
+    swReg = await navigator.serviceWorker.register('/KS-Xi/sw.js', {updateViaCache: 'none'});
+    console.log('SW registered fresh');
   } catch(e) {
-    // Fallback blob SW for offline only (no push)
-    try {
-      const sw = `
-self.addEventListener('install',()=>self.skipWaiting());
-self.addEventListener('activate',e=>e.waitUntil(clients.claim()));
-self.addEventListener('fetch',e=>{
-  if(e.request.mode==='navigate')
-    e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));
-});`;
-      const blob = new Blob([sw], {type:'application/javascript'});
-      await navigator.serviceWorker.register(URL.createObjectURL(blob));
-    } catch(e2) {}
+    console.log('SW registration failed:', e);
   }
 }
 
